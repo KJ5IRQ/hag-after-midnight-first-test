@@ -15,6 +15,7 @@ from .core import (
     DEFAULT_EXCLUDES,
     DEFAULT_MARKERS,
     Finding,
+    git_files,
     read_ignore_file,
     scan,
     select_findings,
@@ -72,6 +73,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="marker to find; repeatable",
     )
     parser.add_argument("--exclude", action="append", default=[], help="file or directory name to skip")
+    parser.add_argument(
+        "--files",
+        choices=("all", "git", "tracked"),
+        default="all",
+        help="file source: filesystem, Git non-ignored, or Git tracked only",
+    )
     parser.add_argument("--ignore-file", type=Path, help="glob file (default: PATH/.debtmarkignore)")
     parser.add_argument("--git-age", action="store_true", help="include the commit age of each line")
     parser.add_argument(
@@ -133,7 +140,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     if ignore_patterns is None:
         return 2
     needs_git_age = args.git_age or args.min_age is not None or args.sort == "age"
-    findings = scan(root, markers, excludes, needs_git_age, ignore_patterns=ignore_patterns)
+    files = None
+    if args.files != "all":
+        files = git_files(root, tracked_only=args.files == "tracked")
+        if files is None:
+            print(f"debtmark: --files {args.files} requires a Git work tree", file=sys.stderr)
+            return 2
+    findings = scan(
+        root,
+        markers,
+        excludes,
+        needs_git_age,
+        ignore_patterns=ignore_patterns,
+        files=files,
+    )
 
     if args.write_baseline:
         try:

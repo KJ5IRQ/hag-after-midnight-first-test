@@ -13,6 +13,7 @@ from unittest import mock
 from debtmark.cli import (
     DEFAULT_EXCLUDES,
     Finding,
+    git_files,
     main,
     new_since_baseline,
     read_baseline,
@@ -120,6 +121,26 @@ class ScanTests(unittest.TestCase):
             self.assertEqual([finding.age_days for finding in findings], [10, 10, None])
             self.assertEqual(findings[0].committed_at, "2020-01-01T00:00:00+00:00")
             self.assertEqual(run.call_count, 1)
+
+    def test_git_file_selection_honors_ignores_and_tracked_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            (root / ".gitignore").write_text("ignored.py\n", encoding="utf-8")
+            (root / "tracked.py").write_text("# TODO: tracked\n", encoding="utf-8")
+            (root / "untracked.py").write_text("# FIXME: untracked\n", encoding="utf-8")
+            (root / "ignored.py").write_text("# HACK: ignored\n", encoding="utf-8")
+            subprocess.run(["git", "add", ".gitignore", "tracked.py"], cwd=root, check=True)
+
+            selected = git_files(root)
+            tracked = git_files(root, tracked_only=True)
+
+            self.assertIsNotNone(selected)
+            self.assertIsNotNone(tracked)
+            self.assertEqual(
+                [finding.marker for finding in scan(root, files=selected)], ["TODO", "FIXME"]
+            )
+            self.assertEqual([finding.marker for finding in scan(root, files=tracked)], ["TODO"])
 
     def test_ignore_patterns_match_paths_components_and_directories(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

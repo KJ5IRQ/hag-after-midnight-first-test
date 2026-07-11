@@ -104,6 +104,47 @@ def iter_files(
             yield path
 
 
+def git_files(root: Path, tracked_only: bool = False) -> list[Path] | None:
+    """Return Git-selected files, or None when root is not in a work tree."""
+    command = ["git", "ls-files", "-z", "--cached"]
+    if not tracked_only:
+        command.extend(("--others", "--exclude-standard"))
+    try:
+        result = subprocess.run(command, cwd=root, capture_output=True, timeout=10, check=False)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0:
+        return None
+    return [root / os.fsdecode(name) for name in result.stdout.split(b"\0") if name]
+
+
+def _select_explicit_files(
+    root: Path,
+    files: Sequence[Path],
+    excludes: set[str],
+    max_size: int,
+    ignore_patterns: Sequence[str],
+) -> Iterable[Path]:
+    for path in sorted(files):
+        try:
+            relative = path.relative_to(root).as_posix()
+        except ValueError:
+            continue
+        parts = relative.split("/")
+        if (
+            any(part in excludes or part.endswith(".egg-info") for part in parts)
+            or path.is_symlink()
+            or _matches_ignore(relative, ignore_patterns)
+        ):
+            continue
+        try:
+            if not path.is_file() or path.stat().st_size > max_size or _is_binary(path):
+                continue
+        except OSError:
+            continue
+        yield path
+
+
 def _git_timestamps(root: Path, relative_path: str) -> dict[int, datetime]:
     """Return author timestamps by final line using one blame process per file."""
     command = ["git", "blame", "--line-porcelain", "--", relative_path]
@@ -139,6 +180,7 @@ def scan(
     now: datetime | None = None,
     max_size: int = MAX_FILE_SIZE,
     ignore_patterns: Sequence[str] = (),
+    files: Sequence[Path] | None = None,
 ) -> list[Finding]:
     """Scan root and return debt markers in deterministic path/line order."""
     root = root.resolve()
@@ -151,7 +193,12 @@ def scan(
     current_time = now or datetime.now(timezone.utc)
     findings: list[Finding] = []
 
-    for path in iter_files(root, set(excludes), max_size, ignore_patterns):
+    candidates = (
+        iter_files(root, set(excludes), max_size, ignore_patterns)
+        if files is None
+        else _select_explicit_files(root, files, set(excludes), max_size, ignore_patterns)
+    )
+    for path in candidates:
         relative = path.relative_to(root).as_posix()
         try:
             lines = path.read_text(encoding="utf-8", errors="replace").splitlines()

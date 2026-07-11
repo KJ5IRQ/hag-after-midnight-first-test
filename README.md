@@ -29,6 +29,8 @@ $ debtmark . --exclude fixtures --fail-on-findings
 $ debtmark . --write-baseline .debtmark-baseline.json
 $ debtmark . --baseline .debtmark-baseline.json --fail-on-findings
 $ debtmark . --ignore-file tools/debtmark.ignore
+$ debtmark . --files git
+$ debtmark . --files tracked
 ```
 
 Text output is deliberately compatible with editor “file:line” navigation:
@@ -73,6 +75,10 @@ src/*.generated.py
 
 This is intentionally a small glob format, not a clone of `.gitignore`: negation and
 escaped comments are not supported. Use `--ignore-file PATH` to select another file.
+
+In a Git work tree, `--files git` scans tracked files plus untracked files not ignored
+by Git. `--files tracked` scans only files in the index. Both modes still apply
+debtmark's built-in exclusions and `.debtmarkignore` rules.
 
 ## Suppress intentional matches
 

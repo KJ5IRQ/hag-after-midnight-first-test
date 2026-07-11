@@ -56,6 +56,13 @@ class InstalledCliTests(unittest.TestCase):
             self.assertEqual(result.returncode, 2)
             self.assertIn("marker must not be empty", result.stderr)
 
+    def test_git_file_mode_requires_a_work_tree(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            result = self.run_debtmark(Path(directory), "--files", "tracked")
+
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("requires a Git work tree", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
