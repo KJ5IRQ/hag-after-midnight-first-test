@@ -28,6 +28,11 @@ DEFAULT_EXCLUDES = (
     "dist",
     "build",
     "__pycache__",
+    ".mypy_cache",
+    ".nox",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
 )
 BINARY_SAMPLE_SIZE = 8192
 MAX_FILE_SIZE = 2 * 1024 * 1024
@@ -137,7 +142,12 @@ def iter_files(
         for name in sorted(dirnames):
             path = Path(current) / name
             relative = path.relative_to(root).as_posix()
-            if name not in excludes and not path.is_symlink() and not _matches_ignore(relative, ignore_patterns):
+            if (
+                name not in excludes
+                and not name.endswith(".egg-info")
+                and not path.is_symlink()
+                and not _matches_ignore(relative, ignore_patterns)
+            ):
                 kept_directories.append(name)
         dirnames[:] = kept_directories
         for filename in sorted(filenames):

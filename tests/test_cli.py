@@ -11,6 +11,7 @@ import unittest
 from unittest import mock
 
 from debtmark.cli import (
+    DEFAULT_EXCLUDES,
     Finding,
     main,
     new_since_baseline,
@@ -40,13 +41,17 @@ class ScanTests(unittest.TestCase):
             root = Path(directory)
             (root / "ignored").mkdir()
             (root / "ignored" / "x.py").write_text("# TODO hidden", encoding="utf-8")
+            (root / "package.egg-info").mkdir()
+            (root / "package.egg-info" / "PKG-INFO").write_text("TODO hidden", encoding="utf-8")
+            (root / ".ruff_cache").mkdir()
+            (root / ".ruff_cache" / "state").write_text("TODO hidden", encoding="utf-8")
             (root / "binary").write_bytes(b"TODO\0binary")
             (root / "large.txt").write_text("TODO " * 20, encoding="utf-8")
             target = root / "target.txt"
             target.write_text("TODO visible", encoding="utf-8")
             (root / "link.txt").symlink_to(target)
 
-            findings = scan(root, excludes=("ignored",), max_size=20)
+            findings = scan(root, excludes=(*DEFAULT_EXCLUDES, "ignored"), max_size=20)
 
             self.assertEqual([(f.path, f.line) for f in findings], [("target.txt", 1)])
 
