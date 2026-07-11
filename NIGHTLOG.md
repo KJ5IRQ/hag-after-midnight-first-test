@@ -53,3 +53,9 @@ compatible.
 Version 0.2.0 is the honest boundary for this work. CI now installs a wheel rather
 than an editable checkout and invokes the command from outside the repository, which
 catches packaging mistakes that an in-tree smoke test cannot.
+
+The last additions were integration-driven rather than decorative: SARIF output for
+code-scanning systems, subprocess tests covering every report format through
+`python -m debtmark`, and rejection of empty markers and boolean baseline counts.
+The suite now has 22 tests, including shell-visible exit behavior. Stop here: the
+next honest work needs feedback from use outside this repository.
