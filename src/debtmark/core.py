@@ -139,6 +139,8 @@ def scan(
 ) -> list[Finding]:
     """Scan root and return debt markers in deterministic path/line order."""
     root = root.resolve()
+    if not markers:
+        return []
     marker_pattern = re.compile(
         r"(?<!\w)(" + "|".join(re.escape(marker) for marker in markers) + r")(?!\w)",
         re.IGNORECASE,

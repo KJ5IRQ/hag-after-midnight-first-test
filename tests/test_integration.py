@@ -49,6 +49,13 @@ class InstalledCliTests(unittest.TestCase):
             self.assertIn("FIXME", result.stdout)
             self.assertEqual(result.stderr, "")
 
+    def test_blank_markers_are_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            result = self.run_debtmark(Path(directory), "--marker", "   ")
+
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("marker must not be empty", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

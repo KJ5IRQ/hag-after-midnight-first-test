@@ -67,6 +67,13 @@ class ScanTests(unittest.TestCase):
 
             self.assertEqual(len(findings), 1)
 
+    def test_empty_marker_sequence_finds_nothing(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "work.py").write_text("ordinary line\n", encoding="utf-8")
+
+            self.assertEqual(scan(root, markers=()), [])
+
     def test_git_age_uses_blame_timestamp(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -228,6 +235,18 @@ class RenderAndCliTests(unittest.TestCase):
 
             self.assertEqual(status, 2)
             self.assertIn("unsupported baseline version", error.getvalue())
+
+    def test_baseline_rejects_boolean_counts(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            baseline = Path(directory, "baseline.json")
+            baseline.write_text(
+                '{"version": 1, "findings": [{"path": "x", "marker": "TODO", '
+                '"text": "TODO", "count": true}]}',
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "invalid values"):
+                read_baseline(baseline)
 
     def test_default_ignore_file_and_missing_explicit_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

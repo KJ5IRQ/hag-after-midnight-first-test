@@ -51,13 +51,26 @@ def nonnegative_int(value: str) -> int:
     return parsed
 
 
+def marker_value(value: str) -> str:
+    """Argparse converter that rejects markers which match every line."""
+    if not value.strip():
+        raise argparse.ArgumentTypeError("marker must not be empty")
+    return value
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="debtmark", description="Find TODO, FIXME, HACK, and XXX markers in a repository."
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("path", nargs="?", default=".", type=Path)
-    parser.add_argument("--marker", action="append", dest="markers", help="marker to find; repeatable")
+    parser.add_argument(
+        "--marker",
+        action="append",
+        type=marker_value,
+        dest="markers",
+        help="marker to find; repeatable",
+    )
     parser.add_argument("--exclude", action="append", default=[], help="file or directory name to skip")
     parser.add_argument("--ignore-file", type=Path, help="glob file (default: PATH/.debtmarkignore)")
     parser.add_argument("--git-age", action="store_true", help="include the commit age of each line")
