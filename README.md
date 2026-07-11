@@ -31,6 +31,7 @@ $ debtmark . --baseline .debtmark-baseline.json --fail-on-findings
 $ debtmark . --ignore-file tools/debtmark.ignore
 $ debtmark . --files git
 $ debtmark . --files tracked
+$ debtmark . --config tools/debtmark.json
 ```
 
 Text output is deliberately compatible with editor “file:line” navigation:
@@ -92,6 +93,23 @@ example = "FIXME: shown in documentation"
 
 Put `debtmark: ignore-file` anywhere in a file to suppress that file completely.
 Directives are case-insensitive and lexical, like marker scanning itself.
+
+## Repository policy
+
+Debtmark automatically reads `.debtmark-config.json` from the scan root. A different
+file can be selected with `--config`. Command-line markers and file mode override the
+configured values; command-line exclusions are added to configured exclusions.
+
+```json
+{
+  "markers": ["TODO", "FIXME", "DEPRECATED"],
+  "exclude": ["fixtures"],
+  "ignore": ["docs/examples/**"],
+  "files": "git"
+}
+```
+
+Unknown fields and malformed values are errors rather than silently ignored policy.
 
 ## Design limits
 

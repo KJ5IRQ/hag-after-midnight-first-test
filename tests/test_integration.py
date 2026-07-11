@@ -63,6 +63,42 @@ class InstalledCliTests(unittest.TestCase):
             self.assertEqual(result.returncode, 2)
             self.assertIn("requires a Git work tree", result.stderr)
 
+    def test_repository_config_sets_markers_excludes_and_ignore_globs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".debtmark-config.json").write_text(
+                json.dumps(
+                    {
+                        "markers": ["DEBT"],
+                        "exclude": ["vendor"],
+                        "ignore": ["docs/*.txt"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (root / "vendor").mkdir()
+            (root / "vendor" / "x.py").write_text("# DEBT hidden\n", encoding="utf-8")
+            (root / "docs").mkdir()
+            (root / "docs" / "x.txt").write_text("DEBT hidden\n", encoding="utf-8")
+            (root / "work.py").write_text("# TODO ignored\n# DEBT visible\n", encoding="utf-8")
+
+            result = self.run_debtmark(root)
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("work.py:2: DEBT", result.stdout)
+            self.assertNotIn("hidden", result.stdout)
+
+    def test_unknown_config_fields_fail_loudly(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            config = root / "policy.json"
+            config.write_text('{"markres": ["TODO"]}', encoding="utf-8")
+
+            result = self.run_debtmark(root, "--config", str(config))
+
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("unknown config field: markres", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -11,6 +11,7 @@ from typing import Sequence
 
 from . import __version__
 from .baseline import new_since_baseline, read_baseline, write_baseline
+from .config import Config, read_config
 from .core import (
     DEFAULT_EXCLUDES,
     DEFAULT_MARKERS,
@@ -65,6 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("path", nargs="?", default=".", type=Path)
+    parser.add_argument("--config", type=Path, help="policy file (default: PATH/.debtmark-config.json)")
     parser.add_argument(
         "--marker",
         action="append",
@@ -76,7 +78,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--files",
         choices=("all", "git", "tracked"),
-        default="all",
+        default=None,
         help="file source: filesystem, Git non-ignored, or Git tracked only",
     )
     parser.add_argument("--ignore-file", type=Path, help="glob file (default: PATH/.debtmarkignore)")
@@ -128,9 +130,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"debtmark: not a directory: {root}", file=sys.stderr)
         return 2
 
-    markers = tuple(args.markers or DEFAULT_MARKERS)
+    config_path = args.config or root / ".debtmark-config.json"
+    config = Config()
+    if config_path.exists():
+        try:
+            config = read_config(config_path)
+        except (OSError, ValueError, json.JSONDecodeError) as error:
+            print(f"debtmark: invalid config {config_path}: {error}", file=sys.stderr)
+            return 2
+    elif args.config is not None:
+        print(f"debtmark: config file not found: {config_path}", file=sys.stderr)
+        return 2
+
+    markers = tuple(args.markers or config.markers or DEFAULT_MARKERS)
     baseline_path = args.baseline or args.write_baseline
-    excludes = [*DEFAULT_EXCLUDES, *args.exclude]
+    excludes = [*DEFAULT_EXCLUDES, *config.excludes, *args.exclude]
+    resolved_config = config_path.resolve()
+    if resolved_config.parent == root or root in resolved_config.parents:
+        excludes.append(config_path.name)
     if baseline_path is not None:
         resolved_baseline = baseline_path.resolve()
         if resolved_baseline.parent == root or root in resolved_baseline.parents:
@@ -139,12 +156,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     ignore_patterns = _load_ignore_patterns(args, root, excludes)
     if ignore_patterns is None:
         return 2
+    ignore_patterns = (*ignore_patterns, *config.ignore)
     needs_git_age = args.git_age or args.min_age is not None or args.sort == "age"
     files = None
-    if args.files != "all":
-        files = git_files(root, tracked_only=args.files == "tracked")
+    file_mode = args.files or config.files or "all"
+    if file_mode != "all":
+        files = git_files(root, tracked_only=file_mode == "tracked")
         if files is None:
-            print(f"debtmark: --files {args.files} requires a Git work tree", file=sys.stderr)
+            print(f"debtmark: file mode {file_mode} requires a Git work tree", file=sys.stderr)
             return 2
     findings = scan(
         root,
