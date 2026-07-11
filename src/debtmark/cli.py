@@ -15,6 +15,8 @@ import subprocess
 import sys
 from typing import Iterable, Sequence
 
+from . import __version__
+
 DEFAULT_MARKERS = ("TODO", "FIXME", "HACK", "XXX")
 DEFAULT_EXCLUDES = (
     ".git",
@@ -245,6 +247,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="debtmark", description="Find TODO, FIXME, HACK, and XXX markers in a repository."
     )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("path", nargs="?", default=".", type=Path)
     parser.add_argument("--marker", action="append", dest="markers", help="marker to find; repeatable")
     parser.add_argument("--exclude", action="append", default=[], help="file or directory name to skip")
