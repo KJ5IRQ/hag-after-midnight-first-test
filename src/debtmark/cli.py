@@ -212,9 +212,10 @@ def _git_timestamps(root: Path, relative_path: str) -> dict[int, datetime]:
     timestamps: dict[int, datetime] = {}
     current_line: int | None = None
     for output_line in result.stdout.splitlines():
-        header = re.match(r"^[0-9a-f^]+ \d+ (\d+)(?: \d+)?$", output_line)
+        header = re.match(r"^([0-9a-f^]+) \d+ (\d+)(?: \d+)?$", output_line)
         if header:
-            current_line = int(header.group(1))
+            commit = header.group(1).lstrip("^")
+            current_line = None if not commit.strip("0") else int(header.group(2))
         elif current_line is not None and output_line.startswith("author-time "):
             try:
                 value = int(output_line.removeprefix("author-time "))
@@ -288,6 +289,39 @@ def render_markdown(findings: Sequence[Finding], root: Path) -> str:
     return "\n".join(lines) + "\n"
 
 
+def render_summary(findings: Sequence[Finding], root: Path) -> str:
+    """Render repository-level counts for quick triage."""
+    file_count = len({finding.path for finding in findings})
+    lines = [f"debtmark: {len(findings)} marker(s) across {file_count} file(s) in {root}"]
+    if not findings:
+        return "\n".join(lines)
+
+    marker_counts = Counter(finding.marker for finding in findings)
+    lines.append("markers:")
+    width = max(len(marker) for marker in marker_counts)
+    for marker, count in sorted(marker_counts.items()):
+        lines.append(f"  {marker:<{width}}  {count}")
+
+    age_counts = {"<30d": 0, "30-89d": 0, "90-364d": 0, ">=365d": 0, "unknown": 0}
+    for finding in findings:
+        if finding.age_days is None:
+            age_counts["unknown"] += 1
+        elif finding.age_days < 30:
+            age_counts["<30d"] += 1
+        elif finding.age_days < 90:
+            age_counts["30-89d"] += 1
+        elif finding.age_days < 365:
+            age_counts["90-364d"] += 1
+        else:
+            age_counts[">=365d"] += 1
+    if any(count for label, count in age_counts.items() if label != "unknown"):
+        lines.append("ages:")
+        for label, count in age_counts.items():
+            if count:
+                lines.append(f"  {label:<7}  {count}")
+    return "\n".join(lines)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="debtmark", description="Find TODO, FIXME, HACK, and XXX markers in a repository."
@@ -305,7 +339,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="only show committed markers at least DAYS old",
     )
     parser.add_argument("--sort", choices=("path", "age", "marker"), default="path")
-    parser.add_argument("--format", choices=("text", "json", "markdown"), default="text")
+    parser.add_argument("--format", choices=("text", "json", "markdown", "summary"), default="text")
     parser.add_argument("--fail-on-findings", action="store_true", help="exit 1 when markers are found")
     baseline = parser.add_mutually_exclusive_group()
     baseline.add_argument("--baseline", type=Path, help="report only findings absent from this baseline")
@@ -369,6 +403,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
     elif args.format == "markdown":
         print(render_markdown(findings, root), end="")
+    elif args.format == "summary":
+        print(render_summary(findings, root))
     else:
         print(render_text(findings, root))
     return 1 if findings and args.fail_on_findings else 0

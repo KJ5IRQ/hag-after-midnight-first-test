@@ -17,6 +17,7 @@ from debtmark.cli import (
     new_since_baseline,
     read_baseline,
     render_markdown,
+    render_summary,
     scan,
     select_findings,
     write_baseline,
@@ -78,13 +79,15 @@ class ScanTests(unittest.TestCase):
             }
             subprocess.run(["git", "add", "work.py"], cwd=root, check=True)
             subprocess.run(["git", "commit", "-qm", "add work"], cwd=root, check=True, env={**__import__("os").environ, **env})
+            with (root / "work.py").open("a", encoding="utf-8") as source:
+                source.write("# HACK: uncommitted\n")
 
             with mock.patch("debtmark.cli.subprocess.run", wraps=subprocess.run) as run:
                 findings = scan(
                     root, with_git_age=True, now=datetime(2020, 1, 11, tzinfo=timezone.utc)
                 )
 
-            self.assertEqual([finding.age_days for finding in findings], [10, 10])
+            self.assertEqual([finding.age_days for finding in findings], [10, 10, None])
             self.assertEqual(findings[0].committed_at, "2020-01-01T00:00:00+00:00")
             self.assertEqual(run.call_count, 1)
 
@@ -136,6 +139,23 @@ class RenderAndCliTests(unittest.TestCase):
     def test_markdown_escapes_table_pipes(self) -> None:
         output = render_markdown([Finding("a.py", 3, "TODO", "# TODO: a | b")], Path("/repo"))
         self.assertIn("a \\| b", output)
+
+    def test_summary_groups_markers_files_and_age_buckets(self) -> None:
+        findings = [
+            Finding("a.py", 1, "TODO", "young", age_days=2),
+            Finding("a.py", 2, "TODO", "old", age_days=400),
+            Finding("b.py", 1, "FIXME", "middle", age_days=100),
+            Finding("c.py", 1, "HACK", "uncommitted"),
+        ]
+
+        output = render_summary(findings, Path("/repo"))
+
+        self.assertIn("4 marker(s) across 3 file(s)", output)
+        self.assertIn("FIXME  1", output)
+        self.assertIn("TODO   2", output)
+        self.assertIn("<30d     1", output)
+        self.assertIn(">=365d   1", output)
+        self.assertIn("unknown  1", output)
 
     def test_json_and_fail_exit(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
