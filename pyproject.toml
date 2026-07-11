@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "debtmark"
-version = "0.1.0"
+version = "0.2.0"
 description = "Find the promises your codebase has stopped noticing."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -14,6 +14,12 @@ classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
 ]
+keywords = ["technical-debt", "todo", "static-analysis", "cli"]
+
+[project.urls]
+Homepage = "https://github.com/KJ5IRQ/hag-after-midnight"
+Repository = "https://github.com/KJ5IRQ/hag-after-midnight"
+Issues = "https://github.com/KJ5IRQ/hag-after-midnight/issues"
 
 [project.scripts]
 debtmark = "debtmark.cli:main"

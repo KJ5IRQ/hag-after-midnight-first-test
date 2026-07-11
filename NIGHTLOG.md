@@ -35,3 +35,21 @@ The project closes the night with a Python 3.10–3.13 CI matrix, a buildable wh
 13 passing tests, CLI version output, and four focused commits. The next useful step
 is real-world use on repositories of different sizes, not another feature guessed in
 advance.
+
+### Continued dogfooding
+
+Running debtmark against itself exposed generated `*.egg-info` as noise and showed
+that uncommitted Git blame records were being assigned a synthetic current age. Both
+are fixed. The self-scan also made an important product boundary explicit: debtmark
+is lexical rather than language-aware, so examples and string literals are findings.
+That limit is now documented instead of hidden.
+
+Triage improved with minimum-age filtering, age and marker sorting, and a compact
+summary grouped by marker and age bucket. The original module had grown past the
+point where changes were easy to reason about, so scanning, baselines, rendering,
+and CLI orchestration now have separate modules while the old import surface remains
+compatible.
+
+Version 0.2.0 is the honest boundary for this work. CI now installs a wheel rather
+than an editable checkout and invokes the command from outside the repository, which
+catches packaging mistakes that an in-tree smoke test cannot.
