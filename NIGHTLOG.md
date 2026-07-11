@@ -16,3 +16,22 @@ Constraints chosen deliberately:
 
 Possible next work, only if evidence warrants it: a baseline/ratchet file so CI can
 reject new debt without requiring old debt to disappear at once. Do not add a TUI.
+
+### Later in the same night
+
+The baseline earned its way in. It stores counts keyed by path, marker, and text, so
+line movement is harmless while duplicate additions remain visible. The CLI can now
+write a baseline or report only findings beyond one.
+
+Added `.debtmarkignore` support after noticing that generated trees need path-level
+rules rather than a growing list of command-line exclusions. Its syntax stays small
+and explicit; pretending to fully implement Git's ignore semantics would be a trap.
+
+Git age originally launched `git blame` once per finding. That was correct but would
+be miserable on a debt-heavy repository. It now launches once per marked file and
+parses all line timestamps from porcelain output.
+
+The project closes the night with a Python 3.10–3.13 CI matrix, a buildable wheel,
+13 passing tests, CLI version output, and four focused commits. The next useful step
+is real-world use on repositories of different sizes, not another feature guessed in
+advance.
