@@ -151,20 +151,30 @@ def iter_files(
             yield path
 
 
-def _git_timestamp(root: Path, relative_path: str, line: int) -> datetime | None:
-    command = ["git", "blame", "--line-porcelain", f"-L{line},{line}", "--", relative_path]
+def _git_timestamps(root: Path, relative_path: str) -> dict[int, datetime]:
+    """Return author timestamps by final line using one blame process per file."""
+    command = ["git", "blame", "--line-porcelain", "--", relative_path]
     try:
         result = subprocess.run(
             command, cwd=root, capture_output=True, text=True, timeout=10, check=False
         )
     except (OSError, subprocess.TimeoutExpired):
-        return None
+        return {}
     if result.returncode != 0:
-        return None
-    match = re.search(r"^author-time (\d+)$", result.stdout, re.MULTILINE)
-    if not match:
-        return None
-    return datetime.fromtimestamp(int(match.group(1)), tz=timezone.utc)
+        return {}
+    timestamps: dict[int, datetime] = {}
+    current_line: int | None = None
+    for output_line in result.stdout.splitlines():
+        header = re.match(r"^[0-9a-f^]+ \d+ (\d+)(?: \d+)?$", output_line)
+        if header:
+            current_line = int(header.group(1))
+        elif current_line is not None and output_line.startswith("author-time "):
+            try:
+                value = int(output_line.removeprefix("author-time "))
+            except ValueError:
+                continue
+            timestamps[current_line] = datetime.fromtimestamp(value, tz=timezone.utc)
+    return timestamps
 
 
 def scan(
@@ -191,17 +201,19 @@ def scan(
             lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
         except OSError:
             continue
+        matches: list[tuple[int, str, re.Match[str]]] = []
         for number, text in enumerate(lines, 1):
             match = marker_pattern.search(text)
-            if not match:
-                continue
+            if match:
+                matches.append((number, text, match))
+        timestamps = _git_timestamps(root, relative) if with_git_age and matches else {}
+        for number, text, match in matches:
             committed_at = None
             age_days = None
-            if with_git_age:
-                timestamp = _git_timestamp(root, relative, number)
-                if timestamp is not None:
-                    committed_at = timestamp.isoformat()
-                    age_days = max(0, (current_time - timestamp).days)
+            timestamp = timestamps.get(number)
+            if timestamp is not None:
+                committed_at = timestamp.isoformat()
+                age_days = max(0, (current_time - timestamp).days)
             findings.append(
                 Finding(relative, number, match.group(1).upper(), text.strip(), committed_at, age_days)
             )

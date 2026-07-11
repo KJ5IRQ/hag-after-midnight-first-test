@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
 from debtmark.cli import (
     Finding,
@@ -64,7 +65,7 @@ class ScanTests(unittest.TestCase):
             subprocess.run(["git", "init", "-q"], cwd=root, check=True)
             subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=root, check=True)
             subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
-            (root / "work.py").write_text("# TODO: old promise\n", encoding="utf-8")
+            (root / "work.py").write_text("# TODO: old promise\n# FIXME: also old\n", encoding="utf-8")
             env = {
                 "GIT_AUTHOR_DATE": "2020-01-01T00:00:00+00:00",
                 "GIT_COMMITTER_DATE": "2020-01-01T00:00:00+00:00",
@@ -72,10 +73,14 @@ class ScanTests(unittest.TestCase):
             subprocess.run(["git", "add", "work.py"], cwd=root, check=True)
             subprocess.run(["git", "commit", "-qm", "add work"], cwd=root, check=True, env={**__import__("os").environ, **env})
 
-            findings = scan(root, with_git_age=True, now=datetime(2020, 1, 11, tzinfo=timezone.utc))
+            with mock.patch("debtmark.cli.subprocess.run", wraps=subprocess.run) as run:
+                findings = scan(
+                    root, with_git_age=True, now=datetime(2020, 1, 11, tzinfo=timezone.utc)
+                )
 
-            self.assertEqual(findings[0].age_days, 10)
+            self.assertEqual([finding.age_days for finding in findings], [10, 10])
             self.assertEqual(findings[0].committed_at, "2020-01-01T00:00:00+00:00")
+            self.assertEqual(run.call_count, 1)
 
     def test_ignore_patterns_match_paths_components_and_directories(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
