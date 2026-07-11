@@ -45,14 +45,6 @@ class Finding:
     age_days: int | None = None
 
 
-def _is_binary(path: Path) -> bool:
-    try:
-        with path.open("rb") as handle:
-            return b"\0" in handle.read(BINARY_SAMPLE_SIZE)
-    except OSError:
-        return True
-
-
 def read_ignore_file(path: Path) -> tuple[str, ...]:
     """Read simple glob patterns, ignoring blank lines and comments."""
     patterns = []
@@ -97,7 +89,7 @@ def iter_files(
             if filename in excludes or path.is_symlink() or _matches_ignore(relative, ignore_patterns):
                 continue
             try:
-                if path.stat().st_size > max_size or _is_binary(path):
+                if path.stat().st_size > max_size:
                     continue
             except OSError:
                 continue
@@ -138,7 +130,7 @@ def _select_explicit_files(
         ):
             continue
         try:
-            if not path.is_file() or path.stat().st_size > max_size or _is_binary(path):
+            if not path.is_file() or path.stat().st_size > max_size:
                 continue
         except OSError:
             continue
@@ -201,9 +193,12 @@ def scan(
     for path in candidates:
         relative = path.relative_to(root).as_posix()
         try:
-            lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+            data = path.read_bytes()
         except OSError:
             continue
+        if b"\0" in data[:BINARY_SAMPLE_SIZE]:
+            continue
+        lines = data.decode(encoding="utf-8", errors="replace").splitlines()
         if any(IGNORE_FILE_PATTERN.search(line) for line in lines):
             continue
         matches: list[tuple[int, str, re.Match[str]]] = []
