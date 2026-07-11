@@ -25,6 +25,7 @@ $ debtmark . --marker NOTE --marker DEPRECATED
 $ debtmark . --exclude fixtures --fail-on-findings
 $ debtmark . --write-baseline .debtmark-baseline.json
 $ debtmark . --baseline .debtmark-baseline.json --fail-on-findings
+$ debtmark . --ignore-file tools/debtmark.ignore
 ```
 
 Text output is deliberately compatible with editor “file:line” navigation:
@@ -54,12 +55,29 @@ line movement does not create false positives. Duplicate comments are counted, s
 third copy is still new. The baseline file itself is excluded when it sits below the
 scanned root.
 
+## Ignore generated or vendored paths
+
+If `.debtmarkignore` exists at the scan root, it is loaded automatically. Blank lines
+and lines beginning with `#` are ignored. Patterns without a slash match any path
+component; patterns with a slash match paths relative to the scan root.
+
+```text
+# generated trees
+vendor
+fixtures/snapshots
+src/*.generated.py
+```
+
+This is intentionally a small glob format, not a clone of `.gitignore`: negation and
+escaped comments are not supported. Use `--ignore-file PATH` to select another file.
+
 ## Design limits
 
 - Markers are whole words and case-insensitive.
 - A line containing several markers is reported once, under the first marker.
 - Git age uses the author timestamp from `git blame`; uncommitted lines have no age.
 - Exclusions match file or directory names, not globs.
+- Ignore-file patterns use case-sensitive shell globs.
 
 ## Development
 

@@ -6,6 +6,7 @@ import argparse
 from collections import Counter
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
+from fnmatch import fnmatchcase
 import json
 import os
 from pathlib import Path
@@ -104,15 +105,43 @@ def _is_binary(path: Path) -> bool:
         return True
 
 
-def iter_files(root: Path, excludes: set[str], max_size: int) -> Iterable[Path]:
+def read_ignore_file(path: Path) -> tuple[str, ...]:
+    """Read simple glob patterns, ignoring blank lines and comments."""
+    patterns = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        pattern = line.strip()
+        if pattern and not pattern.startswith("#"):
+            patterns.append(pattern.rstrip("/"))
+    return tuple(patterns)
+
+
+def _matches_ignore(relative: str, patterns: Sequence[str]) -> bool:
+    parts = relative.split("/")
+    for pattern in patterns:
+        if "/" in pattern:
+            if fnmatchcase(relative, pattern) or relative.startswith(pattern + "/"):
+                return True
+        elif any(fnmatchcase(part, pattern) for part in parts):
+            return True
+    return False
+
+
+def iter_files(
+    root: Path, excludes: set[str], max_size: int, ignore_patterns: Sequence[str] = ()
+) -> Iterable[Path]:
     """Yield candidate text files in stable order without following symlinks."""
     for current, dirnames, filenames in os.walk(root, followlinks=False):
-        dirnames[:] = sorted(
-            name for name in dirnames if name not in excludes and not (Path(current) / name).is_symlink()
-        )
+        kept_directories = []
+        for name in sorted(dirnames):
+            path = Path(current) / name
+            relative = path.relative_to(root).as_posix()
+            if name not in excludes and not path.is_symlink() and not _matches_ignore(relative, ignore_patterns):
+                kept_directories.append(name)
+        dirnames[:] = kept_directories
         for filename in sorted(filenames):
             path = Path(current) / filename
-            if filename in excludes or path.is_symlink():
+            relative = path.relative_to(root).as_posix()
+            if filename in excludes or path.is_symlink() or _matches_ignore(relative, ignore_patterns):
                 continue
             try:
                 if path.stat().st_size > max_size or _is_binary(path):
@@ -145,6 +174,7 @@ def scan(
     with_git_age: bool = False,
     now: datetime | None = None,
     max_size: int = MAX_FILE_SIZE,
+    ignore_patterns: Sequence[str] = (),
 ) -> list[Finding]:
     """Scan root and return debt markers in deterministic path/line order."""
     root = root.resolve()
@@ -155,7 +185,7 @@ def scan(
     current_time = now or datetime.now(timezone.utc)
     findings: list[Finding] = []
 
-    for path in iter_files(root, set(excludes), max_size):
+    for path in iter_files(root, set(excludes), max_size, ignore_patterns):
         relative = path.relative_to(root).as_posix()
         try:
             lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
@@ -206,6 +236,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("path", nargs="?", default=".", type=Path)
     parser.add_argument("--marker", action="append", dest="markers", help="marker to find; repeatable")
     parser.add_argument("--exclude", action="append", default=[], help="file or directory name to skip")
+    parser.add_argument("--ignore-file", type=Path, help="glob file (default: PATH/.debtmarkignore)")
     parser.add_argument("--git-age", action="store_true", help="include the commit age of each line")
     parser.add_argument("--format", choices=("text", "json", "markdown"), default="text")
     parser.add_argument("--fail-on-findings", action="store_true", help="exit 1 when markers are found")
@@ -228,7 +259,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         resolved_baseline = baseline_path.resolve()
         if resolved_baseline.parent == root or root in resolved_baseline.parents:
             excludes.append(baseline_path.name)
-    findings = scan(root, markers, excludes, args.git_age)
+    ignore_file = args.ignore_file
+    explicit_ignore_file = ignore_file is not None
+    if ignore_file is None:
+        ignore_file = root / ".debtmarkignore"
+    ignore_patterns: tuple[str, ...] = ()
+    if ignore_file.exists():
+        try:
+            ignore_patterns = read_ignore_file(ignore_file)
+        except (OSError, UnicodeError) as error:
+            print(f"debtmark: cannot read ignore file {ignore_file}: {error}", file=sys.stderr)
+            return 2
+        resolved_ignore = ignore_file.resolve()
+        if resolved_ignore.parent == root or root in resolved_ignore.parents:
+            excludes.append(ignore_file.name)
+    elif explicit_ignore_file:
+        print(f"debtmark: ignore file not found: {ignore_file}", file=sys.stderr)
+        return 2
+    findings = scan(root, markers, excludes, args.git_age, ignore_patterns=ignore_patterns)
     if args.write_baseline:
         try:
             write_baseline(args.write_baseline, findings)

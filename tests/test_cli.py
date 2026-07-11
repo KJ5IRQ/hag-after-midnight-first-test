@@ -77,6 +77,19 @@ class ScanTests(unittest.TestCase):
             self.assertEqual(findings[0].age_days, 10)
             self.assertEqual(findings[0].committed_at, "2020-01-01T00:00:00+00:00")
 
+    def test_ignore_patterns_match_paths_components_and_directories(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "generated").mkdir()
+            (root / "generated" / "x.py").write_text("# TODO hidden\n", encoding="utf-8")
+            (root / "src").mkdir()
+            (root / "src" / "keep.py").write_text("# TODO visible\n", encoding="utf-8")
+            (root / "src" / "skip.gen.py").write_text("# TODO hidden\n", encoding="utf-8")
+
+            findings = scan(root, ignore_patterns=("generated", "src/*.gen.py"))
+
+            self.assertEqual([finding.path for finding in findings], ["src/keep.py"])
+
 
 class RenderAndCliTests(unittest.TestCase):
     def test_markdown_escapes_table_pipes(self) -> None:
@@ -130,6 +143,24 @@ class RenderAndCliTests(unittest.TestCase):
 
             self.assertEqual(status, 2)
             self.assertIn("unsupported baseline version", error.getvalue())
+
+    def test_default_ignore_file_and_missing_explicit_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".debtmarkignore").write_text("# generated code\nignored.py\n", encoding="utf-8")
+            (root / "ignored.py").write_text("# TODO hidden\n", encoding="utf-8")
+            (root / "kept.py").write_text("# TODO visible\n", encoding="utf-8")
+            output = io.StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(main([directory]), 0)
+            self.assertIn("kept.py:1", output.getvalue())
+            self.assertNotIn("ignored.py", output.getvalue())
+
+            error = io.StringIO()
+            with redirect_stderr(error):
+                status = main([directory, "--ignore-file", str(root / "missing")])
+            self.assertEqual(status, 2)
+            self.assertIn("ignore file not found", error.getvalue())
 
     def test_baseline_round_trip(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
