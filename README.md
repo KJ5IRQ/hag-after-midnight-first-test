@@ -33,6 +33,7 @@ $ debtmark . --files git
 $ debtmark . --files tracked
 $ debtmark . --config tools/debtmark.json
 $ debtmark . --changed origin/main --fail-on-findings
+$ debtmark . --format github
 ```
 
 Text output is deliberately compatible with editor “file:line” navigation:

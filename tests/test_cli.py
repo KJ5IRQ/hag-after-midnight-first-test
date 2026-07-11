@@ -18,6 +18,7 @@ from debtmark.cli import (
     main,
     new_since_baseline,
     read_baseline,
+    render_github,
     render_markdown,
     render_sarif,
     render_summary,
@@ -248,6 +249,17 @@ class RenderAndCliTests(unittest.TestCase):
         self.assertEqual(first["locations"][0]["physicalLocation"]["artifactLocation"]["uri"], "src/a.py")
         self.assertEqual(first["locations"][0]["physicalLocation"]["region"]["startLine"], 7)
         self.assertEqual(first["properties"]["ageDays"], 90)
+
+    def test_github_annotations_escape_commands_and_properties(self) -> None:
+        output = render_github(
+            [Finding("src/a,b.py", 7, "TODO", "# TODO: 50% done\nnext")]
+        )
+
+        self.assertEqual(
+            output,
+            "::warning file=src/a%2Cb.py,line=7,title=debtmark TODO::"
+            "# TODO: 50%25 done%0Anext",
+        )
 
     def test_json_and_fail_exit(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

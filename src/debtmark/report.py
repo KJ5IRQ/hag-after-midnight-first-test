@@ -64,6 +64,26 @@ def render_summary(findings: Sequence[Finding], root: Path) -> str:
     return "\n".join(lines)
 
 
+def _github_escape(value: str, *, property_value: bool = False) -> str:
+    escaped = value.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+    if property_value:
+        escaped = escaped.replace(":", "%3A").replace(",", "%2C")
+    return escaped
+
+
+def render_github(findings: Sequence[Finding]) -> str:
+    """Render GitHub Actions workflow commands as warning annotations."""
+    lines = []
+    for finding in findings:
+        path = _github_escape(finding.path, property_value=True)
+        title = _github_escape(f"debtmark {finding.marker}", property_value=True)
+        message = _github_escape(finding.text)
+        lines.append(
+            f"::warning file={path},line={finding.line},title={title}::{message}"
+        )
+    return "\n".join(lines)
+
+
 def render_sarif(findings: Sequence[Finding]) -> str:
     """Render SARIF 2.1.0 for code-scanning integrations."""
     markers = sorted({finding.marker for finding in findings})

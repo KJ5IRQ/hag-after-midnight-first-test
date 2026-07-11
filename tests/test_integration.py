@@ -30,6 +30,7 @@ class InstalledCliTests(unittest.TestCase):
             markdown = self.run_debtmark(root, "--format", "markdown")
             summary = self.run_debtmark(root, "--format", "summary")
             sarif = self.run_debtmark(root, "--format", "sarif")
+            github = self.run_debtmark(root, "--format", "github")
 
             self.assertEqual(text.returncode, 0, text.stderr)
             self.assertIn("work.py:1: TODO", text.stdout)
@@ -37,6 +38,7 @@ class InstalledCliTests(unittest.TestCase):
             self.assertIn("| `work.py:1` | TODO |", markdown.stdout)
             self.assertIn("1 marker(s) across 1 file(s)", summary.stdout)
             self.assertEqual(json.loads(sarif.stdout)["runs"][0]["results"][0]["ruleId"], "TODO")
+            self.assertIn("::warning file=work.py,line=1,title=debtmark TODO::", github.stdout)
 
     def test_fail_on_findings_is_visible_to_shell(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
