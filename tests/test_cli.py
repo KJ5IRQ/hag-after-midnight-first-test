@@ -82,7 +82,7 @@ class ScanTests(unittest.TestCase):
             with (root / "work.py").open("a", encoding="utf-8") as source:
                 source.write("# HACK: uncommitted\n")
 
-            with mock.patch("debtmark.cli.subprocess.run", wraps=subprocess.run) as run:
+            with mock.patch("debtmark.core.subprocess.run", wraps=subprocess.run) as run:
                 findings = scan(
                     root, with_git_age=True, now=datetime(2020, 1, 11, tzinfo=timezone.utc)
                 )
