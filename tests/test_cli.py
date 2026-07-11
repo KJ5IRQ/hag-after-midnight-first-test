@@ -74,6 +74,28 @@ class ScanTests(unittest.TestCase):
 
             self.assertEqual(scan(root, markers=()), [])
 
+    def test_suppression_directives_skip_line_next_line_and_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "lines.py").write_text(
+                "# TODO: kept\n"
+                "# TODO: inline  # debtmark: ignore\n"
+                "# debtmark: ignore-next-line\n"
+                "# FIXME: next\n"
+                "# HACK: kept too\n",
+                encoding="utf-8",
+            )
+            (root / "whole.py").write_text(
+                "# debtmark: ignore-file\n# TODO: hidden\n", encoding="utf-8"
+            )
+
+            findings = scan(root)
+
+            self.assertEqual(
+                [(finding.line, finding.marker) for finding in findings],
+                [(1, "TODO"), (5, "HACK")],
+            )
+
     def test_git_age_uses_blame_timestamp(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

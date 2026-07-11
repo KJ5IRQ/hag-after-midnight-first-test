@@ -30,6 +30,9 @@ DEFAULT_EXCLUDES = (
 )
 BINARY_SAMPLE_SIZE = 8192
 MAX_FILE_SIZE = 2 * 1024 * 1024
+IGNORE_FILE_PATTERN = re.compile(r"\bdebtmark:\s*ignore-file\b", re.IGNORECASE)
+IGNORE_LINE_PATTERN = re.compile(r"\bdebtmark:\s*ignore(?:\s|$)", re.IGNORECASE)
+IGNORE_NEXT_PATTERN = re.compile(r"\bdebtmark:\s*ignore-next-line\b", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -154,8 +157,19 @@ def scan(
             lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
         except OSError:
             continue
+        if any(IGNORE_FILE_PATTERN.search(line) for line in lines):
+            continue
         matches: list[tuple[int, str, re.Match[str]]] = []
+        ignore_next = False
         for number, text in enumerate(lines, 1):
+            if ignore_next:
+                ignore_next = False
+                continue
+            if IGNORE_NEXT_PATTERN.search(text):
+                ignore_next = True
+                continue
+            if IGNORE_LINE_PATTERN.search(text):
+                continue
             match = marker_pattern.search(text)
             if match:
                 matches.append((number, text, match))

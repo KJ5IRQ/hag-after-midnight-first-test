@@ -74,6 +74,19 @@ src/*.generated.py
 This is intentionally a small glob format, not a clone of `.gitignore`: negation and
 escaped comments are not supported. Use `--ignore-file PATH` to select another file.
 
+## Suppress intentional matches
+
+Keep exceptions beside the code when excluding an entire path would be too broad:
+
+```python
+compatibility = "TODO"  # debtmark: ignore
+# debtmark: ignore-next-line
+example = "FIXME: shown in documentation"
+```
+
+Put `debtmark: ignore-file` anywhere in a file to suppress that file completely.
+Directives are case-insensitive and lexical, like marker scanning itself.
+
 ## Design limits
 
 - Markers are whole words and case-insensitive.
