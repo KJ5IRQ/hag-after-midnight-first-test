@@ -2,6 +2,18 @@
 
 All notable changes are recorded here. The project follows Semantic Versioning.
 
+## 0.4.0 — 2026-07-11
+
+### Added
+
+- Changed-file scanning relative to a Git revision.
+- GitHub Actions warning annotations with workflow-command escaping.
+- Tag and manual workflows for building and verifying release artifacts.
+
+### Changed
+
+- Baseline writes are atomic, durable, and preserve existing permissions.
+
 ## 0.3.0 — 2026-07-11
 
 ### Added

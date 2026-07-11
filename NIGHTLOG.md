@@ -75,3 +75,16 @@ container) and changed to open each candidate once.
 
 These changes form version 0.3.0. The suite stands at 27 tests before final packaging
 verification.
+
+### CI-facing finish
+
+Version 0.4.0 focuses on the boundary between the scanner and CI. A revision can now
+limit scanning to changed files, and GitHub workflow annotations provide immediate
+line-level warnings without requiring SARIF upload plumbing. Baseline replacement is
+atomic so an interrupted write cannot destroy the ratchet.
+
+A release workflow builds both distribution formats, installs the wheel outside the
+checkout, checks imports, uploads artifacts, and rejects tags that disagree with the
+package version. The workflow itself cannot be executed locally because the sandbox
+lacks the `build` package and external package access, so the equivalent wheel path
+remains part of final local verification.
