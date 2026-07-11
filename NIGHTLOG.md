@@ -59,3 +59,19 @@ code-scanning systems, subprocess tests covering every report format through
 `python -m debtmark`, and rejection of empty markers and boolean baseline counts.
 The suite now has 22 tests, including shell-visible exit behavior. Stop here: the
 next honest work needs feedback from use outside this repository.
+
+### One more pass: policy and control
+
+External repository cloning was unavailable because the sandbox proxy could not
+resolve, so the next pass stayed grounded in local dogfooding. Intentional lexical
+matches can now be suppressed inline, on the next line, or for a whole file. Git can
+select either tracked files or all non-ignored files, avoiding duplicate ignore
+policy in ordinary repositories.
+
+Repository policy now lives in a strict JSON file with markers, exclusions, ignore
+globs, and file mode. Unknown keys fail loudly; a misspelled policy is worse than no
+policy. The scanner was also measured on 5,000 synthetic files (0.164 seconds in this
+container) and changed to open each candidate once.
+
+These changes form version 0.3.0. The suite stands at 27 tests before final packaging
+verification.

@@ -185,7 +185,7 @@ class RenderAndCliTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as stopped:
             main(["--version"])
         self.assertEqual(stopped.exception.code, 0)
-        self.assertEqual(output.getvalue(), "debtmark 0.2.0\n")
+        self.assertEqual(output.getvalue(), "debtmark 0.3.0\n")
 
     def test_markdown_escapes_table_pipes(self) -> None:
         output = render_markdown([Finding("a.py", 3, "TODO", "# TODO: a | b")], Path("/repo"))
