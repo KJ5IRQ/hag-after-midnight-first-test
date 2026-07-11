@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 import json
@@ -27,6 +28,7 @@ DEFAULT_EXCLUDES = (
 )
 BINARY_SAMPLE_SIZE = 8192
 MAX_FILE_SIZE = 2 * 1024 * 1024
+BASELINE_VERSION = 1
 
 
 @dataclass(frozen=True)
@@ -37,6 +39,61 @@ class Finding:
     text: str
     committed_at: str | None = None
     age_days: int | None = None
+
+
+def _finding_key(finding: Finding) -> tuple[str, str, str]:
+    return finding.path, finding.marker, finding.text
+
+
+def write_baseline(path: Path, findings: Sequence[Finding]) -> None:
+    """Write stable finding identities and counts, deliberately omitting line numbers."""
+    counts = Counter(_finding_key(finding) for finding in findings)
+    entries = [
+        {"path": key[0], "marker": key[1], "text": key[2], "count": count}
+        for key, count in sorted(counts.items())
+    ]
+    path.write_text(
+        json.dumps({"version": BASELINE_VERSION, "findings": entries}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+def read_baseline(path: Path) -> Counter[tuple[str, str, str]]:
+    """Read and validate a baseline file."""
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict) or payload.get("version") != BASELINE_VERSION:
+        raise ValueError(f"unsupported baseline version (expected {BASELINE_VERSION})")
+    entries = payload.get("findings")
+    if not isinstance(entries, list):
+        raise ValueError("baseline findings must be a list")
+    counts: Counter[tuple[str, str, str]] = Counter()
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise ValueError("baseline finding must be an object")
+        try:
+            key = (entry["path"], entry["marker"], entry["text"])
+            count = entry["count"]
+        except KeyError as error:
+            raise ValueError(f"baseline finding lacks {error.args[0]}") from error
+        if not all(isinstance(value, str) for value in key) or not isinstance(count, int) or count < 1:
+            raise ValueError("baseline finding has invalid values")
+        counts[key] += count
+    return counts
+
+
+def new_since_baseline(
+    findings: Sequence[Finding], baseline: Counter[tuple[str, str, str]]
+) -> list[Finding]:
+    """Return findings in excess of baseline counts, preserving scan order."""
+    remaining = baseline.copy()
+    new: list[Finding] = []
+    for finding in findings:
+        key = _finding_key(finding)
+        if remaining[key] > 0:
+            remaining[key] -= 1
+        else:
+            new.append(finding)
+    return new
 
 
 def _is_binary(path: Path) -> bool:
@@ -66,9 +123,7 @@ def iter_files(root: Path, excludes: set[str], max_size: int) -> Iterable[Path]:
 
 
 def _git_timestamp(root: Path, relative_path: str, line: int) -> datetime | None:
-    command = [
-        "git", "blame", "--line-porcelain", f"-L{line},{line}", "--", relative_path
-    ]
+    command = ["git", "blame", "--line-porcelain", f"-L{line},{line}", "--", relative_path]
     try:
         result = subprocess.run(
             command, cwd=root, capture_output=True, text=True, timeout=10, check=False
@@ -154,6 +209,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--git-age", action="store_true", help="include the commit age of each line")
     parser.add_argument("--format", choices=("text", "json", "markdown"), default="text")
     parser.add_argument("--fail-on-findings", action="store_true", help="exit 1 when markers are found")
+    baseline = parser.add_mutually_exclusive_group()
+    baseline.add_argument("--baseline", type=Path, help="report only findings absent from this baseline")
+    baseline.add_argument("--write-baseline", type=Path, help="write all findings as a baseline and exit")
     return parser
 
 
@@ -164,9 +222,34 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"debtmark: not a directory: {root}", file=sys.stderr)
         return 2
     markers = tuple(args.markers or DEFAULT_MARKERS)
-    findings = scan(root, markers, (*DEFAULT_EXCLUDES, *args.exclude), args.git_age)
+    baseline_path = args.baseline or args.write_baseline
+    excludes = [*DEFAULT_EXCLUDES, *args.exclude]
+    if baseline_path is not None:
+        resolved_baseline = baseline_path.resolve()
+        if resolved_baseline.parent == root or root in resolved_baseline.parents:
+            excludes.append(baseline_path.name)
+    findings = scan(root, markers, excludes, args.git_age)
+    if args.write_baseline:
+        try:
+            write_baseline(args.write_baseline, findings)
+        except OSError as error:
+            print(f"debtmark: cannot write baseline: {error}", file=sys.stderr)
+            return 2
+        print(f"debtmark: wrote {len(findings)} marker(s) to {args.write_baseline}")
+        return 0
+    if args.baseline:
+        try:
+            findings = new_since_baseline(findings, read_baseline(args.baseline))
+        except (OSError, ValueError, json.JSONDecodeError) as error:
+            print(f"debtmark: invalid baseline {args.baseline}: {error}", file=sys.stderr)
+            return 2
     if args.format == "json":
-        print(json.dumps({"root": str(root), "count": len(findings), "findings": [asdict(f) for f in findings]}, indent=2))
+        print(
+            json.dumps(
+                {"root": str(root), "count": len(findings), "findings": [asdict(f) for f in findings]},
+                indent=2,
+            )
+        )
     elif args.format == "markdown":
         print(render_markdown(findings, root), end="")
     else:

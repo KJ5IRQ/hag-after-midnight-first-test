@@ -23,6 +23,8 @@ $ debtmark . --format json
 $ debtmark . --format markdown > debt-report.md
 $ debtmark . --marker NOTE --marker DEPRECATED
 $ debtmark . --exclude fixtures --fail-on-findings
+$ debtmark . --write-baseline .debtmark-baseline.json
+$ debtmark . --baseline .debtmark-baseline.json --fail-on-findings
 ```
 
 Text output is deliberately compatible with editor “file:line” navigation:
@@ -33,9 +35,24 @@ src/cache.py:41: FIXME [327d]  # FIXME: this races during eviction
 src/http.py:9: HACK [12d]  # HACK: remove after the upstream release
 ```
 
-`--fail-on-findings` exits with status 1 if anything is found, making the command
-usable as a CI ratchet. Invalid paths exit with status 2. Without that flag, a
+`--fail-on-findings` exits with status 1 if anything is found. Invalid paths exit
+with status 2. Without that flag, a
 successful scan exits with status 0 regardless of findings.
+
+## Adopt it without cleaning everything first
+
+Capture the current debt, commit the baseline, then fail CI only when a change adds
+more:
+
+```console
+debtmark . --write-baseline .debtmark-baseline.json
+debtmark . --baseline .debtmark-baseline.json --fail-on-findings
+```
+
+Baseline identities use path, marker, and comment text—not line number—so ordinary
+line movement does not create false positives. Duplicate comments are counted, so a
+third copy is still new. The baseline file itself is excluded when it sits below the
+scanned root.
 
 ## Design limits
 

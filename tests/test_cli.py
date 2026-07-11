@@ -9,7 +9,15 @@ import subprocess
 import tempfile
 import unittest
 
-from debtmark.cli import Finding, main, render_markdown, scan
+from debtmark.cli import (
+    Finding,
+    main,
+    new_since_baseline,
+    read_baseline,
+    render_markdown,
+    scan,
+    write_baseline,
+)
 
 
 class ScanTests(unittest.TestCase):
@@ -93,6 +101,49 @@ class RenderAndCliTests(unittest.TestCase):
             status = main(["/path/that/does/not/exist"])
         self.assertEqual(status, 2)
         self.assertIn("not a directory", error.getvalue())
+
+    def test_baseline_ignores_line_moves_and_preserves_duplicate_counts(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "x.py"
+            baseline = root / ".debtmark.json"
+            source.write_text("# TODO same\n# TODO same\n", encoding="utf-8")
+
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(main([directory, "--write-baseline", str(baseline)]), 0)
+            source.write_text("new header\n# TODO same\n# TODO same\n# TODO same\n", encoding="utf-8")
+            output = io.StringIO()
+            with redirect_stdout(output):
+                status = main([directory, "--baseline", str(baseline), "--fail-on-findings"])
+
+            self.assertEqual(status, 1)
+            self.assertIn("x.py:4", output.getvalue())
+            self.assertNotIn(".debtmark.json", output.getvalue())
+
+    def test_invalid_baseline_returns_two(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            baseline = Path(directory, "baseline.json")
+            baseline.write_text('{"version": 99, "findings": []}', encoding="utf-8")
+            error = io.StringIO()
+            with redirect_stderr(error):
+                status = main([directory, "--baseline", str(baseline)])
+
+            self.assertEqual(status, 2)
+            self.assertIn("unsupported baseline version", error.getvalue())
+
+    def test_baseline_round_trip(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            baseline = Path(directory, "baseline.json")
+            findings = [
+                Finding("x.py", 1, "TODO", "# TODO same"),
+                Finding("x.py", 9, "TODO", "# TODO same"),
+            ]
+
+            write_baseline(baseline, findings)
+            counts = read_baseline(baseline)
+
+            self.assertEqual(counts[("x.py", "TODO", "# TODO same")], 2)
+            self.assertEqual(new_since_baseline(findings, counts), [])
 
 
 if __name__ == "__main__":
