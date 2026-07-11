@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from collections import Counter
 import json
+import os
 from pathlib import Path
+import tempfile
 from typing import Sequence
 
 from .core import Finding
@@ -24,10 +26,19 @@ def write_baseline(path: Path, findings: Sequence[Finding]) -> None:
         {"path": key[0], "marker": key[1], "text": key[2], "count": count}
         for key, count in sorted(counts.items())
     ]
-    path.write_text(
-        json.dumps({"version": BASELINE_VERSION, "findings": entries}, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    content = json.dumps({"version": BASELINE_VERSION, "findings": entries}, indent=2) + "\n"
+    descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        mode = path.stat().st_mode if path.exists() else 0o644
+        os.chmod(temporary, mode)
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def read_baseline(path: Path) -> Counter[FindingKey]:

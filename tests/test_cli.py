@@ -353,6 +353,21 @@ class RenderAndCliTests(unittest.TestCase):
             self.assertEqual(counts[("x.py", "TODO", "# TODO same")], 2)
             self.assertEqual(new_since_baseline(findings, counts), [])
 
+    def test_failed_baseline_replace_preserves_original_and_cleans_temp_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            baseline = root / "baseline.json"
+            baseline.write_text("original\n", encoding="utf-8")
+
+            with mock.patch("debtmark.baseline.os.replace", side_effect=OSError("full disk")):
+                with self.assertRaisesRegex(OSError, "full disk"):
+                    write_baseline(
+                        baseline, [Finding("x.py", 1, "TODO", "# TODO same")]
+                    )
+
+            self.assertEqual(baseline.read_text(encoding="utf-8"), "original\n")
+            self.assertEqual([path.name for path in root.iterdir()], ["baseline.json"])
+
 
 if __name__ == "__main__":
     unittest.main()
