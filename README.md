@@ -32,6 +32,7 @@ $ debtmark . --ignore-file tools/debtmark.ignore
 $ debtmark . --files git
 $ debtmark . --files tracked
 $ debtmark . --config tools/debtmark.json
+$ debtmark . --changed origin/main --fail-on-findings
 ```
 
 Text output is deliberately compatible with editor “file:line” navigation:
@@ -110,6 +111,11 @@ configured values; command-line exclusions are added to configured exclusions.
 ```
 
 Unknown fields and malformed values are errors rather than silently ignored policy.
+
+For pull-request checks, `--changed REVISION` restricts scanning to files added,
+copied, modified, or renamed relative to that Git revision. Untracked files are not
+part of a revision diff. An explicit `--changed` overrides configured file mode and
+cannot be combined with an explicit `--files` option.
 
 ## Design limits
 

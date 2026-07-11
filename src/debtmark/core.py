@@ -110,6 +110,26 @@ def git_files(root: Path, tracked_only: bool = False) -> list[Path] | None:
     return [root / os.fsdecode(name) for name in result.stdout.split(b"\0") if name]
 
 
+def git_changed_files(root: Path, revision: str) -> list[Path] | None:
+    """Return files added, copied, modified, or renamed since a Git revision."""
+    command = [
+        "git",
+        "diff",
+        "--name-only",
+        "-z",
+        "--diff-filter=ACMR",
+        revision,
+        "--",
+    ]
+    try:
+        result = subprocess.run(command, cwd=root, capture_output=True, timeout=10, check=False)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0:
+        return None
+    return [root / os.fsdecode(name) for name in result.stdout.split(b"\0") if name]
+
+
 def _select_explicit_files(
     root: Path,
     files: Sequence[Path],

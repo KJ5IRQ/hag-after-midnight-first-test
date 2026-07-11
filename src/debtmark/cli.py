@@ -16,6 +16,7 @@ from .core import (
     DEFAULT_EXCLUDES,
     DEFAULT_MARKERS,
     Finding,
+    git_changed_files,
     git_files,
     read_ignore_file,
     scan,
@@ -81,6 +82,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="file source: filesystem, Git non-ignored, or Git tracked only",
     )
+    parser.add_argument("--changed", metavar="REVISION", help="scan files changed since a Git revision")
     parser.add_argument("--ignore-file", type=Path, help="glob file (default: PATH/.debtmarkignore)")
     parser.add_argument("--git-age", action="store_true", help="include the commit age of each line")
     parser.add_argument(
@@ -160,7 +162,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     needs_git_age = args.git_age or args.min_age is not None or args.sort == "age"
     files = None
     file_mode = args.files or config.files or "all"
-    if file_mode != "all":
+    if args.changed and args.files:
+        print("debtmark: --changed and --files cannot be used together", file=sys.stderr)
+        return 2
+    if args.changed:
+        files = git_changed_files(root, args.changed)
+        if files is None:
+            print(f"debtmark: cannot resolve changed files from {args.changed}", file=sys.stderr)
+            return 2
+    elif file_mode != "all":
         files = git_files(root, tracked_only=file_mode == "tracked")
         if files is None:
             print(f"debtmark: file mode {file_mode} requires a Git work tree", file=sys.stderr)

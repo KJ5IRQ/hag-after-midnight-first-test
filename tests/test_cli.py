@@ -13,6 +13,7 @@ from unittest import mock
 from debtmark.cli import (
     DEFAULT_EXCLUDES,
     Finding,
+    git_changed_files,
     git_files,
     main,
     new_since_baseline,
@@ -141,6 +142,23 @@ class ScanTests(unittest.TestCase):
                 [finding.marker for finding in scan(root, files=selected)], ["TODO", "FIXME"]
             )
             self.assertEqual([finding.marker for finding in scan(root, files=tracked)], ["TODO"])
+
+    def test_changed_file_selection_uses_revision_diff(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
+            (root / "changed.py").write_text("clean\n", encoding="utf-8")
+            (root / "same.py").write_text("# TODO: existing\n", encoding="utf-8")
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            (root / "changed.py").write_text("# FIXME: new\n", encoding="utf-8")
+
+            files = git_changed_files(root, "HEAD")
+
+            self.assertIsNotNone(files)
+            self.assertEqual([finding.path for finding in scan(root, files=files)], ["changed.py"])
 
     def test_ignore_patterns_match_paths_components_and_directories(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
