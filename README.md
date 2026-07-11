@@ -19,6 +19,7 @@ Python 3.10 or newer is required.
 ```console
 $ debtmark src
 $ debtmark . --git-age
+$ debtmark . --min-age 180 --sort age
 $ debtmark . --format json
 $ debtmark . --format markdown > debt-report.md
 $ debtmark . --marker NOTE --marker DEPRECATED
@@ -76,6 +77,7 @@ escaped comments are not supported. Use `--ignore-file PATH` to select another f
 - Markers are whole words and case-insensitive.
 - A line containing several markers is reported once, under the first marker.
 - Git age uses the author timestamp from `git blame`; uncommitted lines have no age.
+- `--min-age` excludes uncommitted markers because they have no meaningful age.
 - Exclusions match file or directory names, not globs.
 - Ignore-file patterns use case-sensitive shell globs.
 

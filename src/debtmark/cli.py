@@ -104,6 +104,41 @@ def new_since_baseline(
     return new
 
 
+def select_findings(
+    findings: Sequence[Finding], min_age: int | None = None, order: str = "path"
+) -> list[Finding]:
+    """Filter and order findings for triage without mutating scan results."""
+    selected = [
+        finding
+        for finding in findings
+        if min_age is None or (finding.age_days is not None and finding.age_days >= min_age)
+    ]
+    if order == "age":
+        return sorted(
+            selected,
+            key=lambda finding: (
+                finding.age_days is None,
+                -(finding.age_days or 0),
+                finding.path,
+                finding.line,
+            ),
+        )
+    if order == "marker":
+        return sorted(selected, key=lambda finding: (finding.marker, finding.path, finding.line))
+    return selected
+
+
+def nonnegative_int(value: str) -> int:
+    """Argparse converter for day counts."""
+    try:
+        parsed = int(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("must be an integer") from error
+    if parsed < 0:
+        raise argparse.ArgumentTypeError("must be zero or greater")
+    return parsed
+
+
 def _is_binary(path: Path) -> bool:
     try:
         with path.open("rb") as handle:
@@ -263,6 +298,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--exclude", action="append", default=[], help="file or directory name to skip")
     parser.add_argument("--ignore-file", type=Path, help="glob file (default: PATH/.debtmarkignore)")
     parser.add_argument("--git-age", action="store_true", help="include the commit age of each line")
+    parser.add_argument(
+        "--min-age",
+        type=nonnegative_int,
+        metavar="DAYS",
+        help="only show committed markers at least DAYS old",
+    )
+    parser.add_argument("--sort", choices=("path", "age", "marker"), default="path")
     parser.add_argument("--format", choices=("text", "json", "markdown"), default="text")
     parser.add_argument("--fail-on-findings", action="store_true", help="exit 1 when markers are found")
     baseline = parser.add_mutually_exclusive_group()
@@ -301,7 +343,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif explicit_ignore_file:
         print(f"debtmark: ignore file not found: {ignore_file}", file=sys.stderr)
         return 2
-    findings = scan(root, markers, excludes, args.git_age, ignore_patterns=ignore_patterns)
+    needs_git_age = args.git_age or args.min_age is not None or args.sort == "age"
+    findings = scan(root, markers, excludes, needs_git_age, ignore_patterns=ignore_patterns)
     if args.write_baseline:
         try:
             write_baseline(args.write_baseline, findings)
@@ -316,6 +359,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         except (OSError, ValueError, json.JSONDecodeError) as error:
             print(f"debtmark: invalid baseline {args.baseline}: {error}", file=sys.stderr)
             return 2
+    findings = select_findings(findings, args.min_age, args.sort)
     if args.format == "json":
         print(
             json.dumps(

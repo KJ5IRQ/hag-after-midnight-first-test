@@ -18,6 +18,7 @@ from debtmark.cli import (
     read_baseline,
     render_markdown,
     scan,
+    select_findings,
     write_baseline,
 )
 
@@ -99,6 +100,29 @@ class ScanTests(unittest.TestCase):
             findings = scan(root, ignore_patterns=("generated", "src/*.gen.py"))
 
             self.assertEqual([finding.path for finding in findings], ["src/keep.py"])
+
+    def test_triage_filters_unknown_ages_and_sorts_oldest_first(self) -> None:
+        findings = [
+            Finding("a.py", 1, "TODO", "new", age_days=2),
+            Finding("b.py", 1, "HACK", "unknown"),
+            Finding("c.py", 1, "FIXME", "old", age_days=90),
+            Finding("d.py", 1, "TODO", "middle", age_days=30),
+        ]
+
+        selected = select_findings(findings, min_age=30, order="age")
+
+        self.assertEqual([finding.path for finding in selected], ["c.py", "d.py"])
+
+    def test_triage_sorts_by_marker_with_path_tiebreaker(self) -> None:
+        findings = [
+            Finding("z.py", 1, "TODO", "later"),
+            Finding("b.py", 2, "FIXME", "first"),
+            Finding("a.py", 3, "FIXME", "second"),
+        ]
+
+        selected = select_findings(findings, order="marker")
+
+        self.assertEqual([finding.path for finding in selected], ["a.py", "b.py", "z.py"])
 
 
 class RenderAndCliTests(unittest.TestCase):
