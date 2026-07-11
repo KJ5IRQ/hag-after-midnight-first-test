@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
+import json
 from pathlib import Path
 from typing import Sequence
 
@@ -61,3 +62,57 @@ def render_summary(findings: Sequence[Finding], root: Path) -> str:
             if count:
                 lines.append(f"  {label:<7}  {count}")
     return "\n".join(lines)
+
+
+def render_sarif(findings: Sequence[Finding]) -> str:
+    """Render SARIF 2.1.0 for code-scanning integrations."""
+    markers = sorted({finding.marker for finding in findings})
+    rules = [
+        {
+            "id": marker,
+            "name": f"Debt marker {marker}",
+            "shortDescription": {"text": f"Source line contains a {marker} debt marker"},
+            "defaultConfiguration": {"level": "note"},
+        }
+        for marker in markers
+    ]
+    results = []
+    for finding in findings:
+        properties = {}
+        if finding.age_days is not None:
+            properties["ageDays"] = finding.age_days
+        if finding.committed_at is not None:
+            properties["committedAt"] = finding.committed_at
+        result = {
+            "ruleId": finding.marker,
+            "level": "note",
+            "message": {"text": finding.text},
+            "locations": [
+                {
+                    "physicalLocation": {
+                        "artifactLocation": {"uri": finding.path},
+                        "region": {"startLine": finding.line},
+                    }
+                }
+            ],
+        }
+        if properties:
+            result["properties"] = properties
+        results.append(result)
+    payload = {
+        "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+        "version": "2.1.0",
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": "debtmark",
+                        "informationUri": "https://github.com/KJ5IRQ/hag-after-midnight",
+                        "rules": rules,
+                    }
+                },
+                "results": results,
+            }
+        ],
+    }
+    return json.dumps(payload, indent=2)

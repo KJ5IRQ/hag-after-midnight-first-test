@@ -19,7 +19,7 @@ from .core import (
     scan,
     select_findings,
 )
-from .report import render_markdown, render_summary, render_text
+from .report import render_markdown, render_sarif, render_summary, render_text
 
 # These imports are intentionally public here for compatibility with the original
 # single-module API. New library users should import from core, baseline, or report.
@@ -31,6 +31,7 @@ __all__ = [
     "new_since_baseline",
     "read_baseline",
     "render_markdown",
+    "render_sarif",
     "render_summary",
     "render_text",
     "scan",
@@ -67,7 +68,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="only show committed markers at least DAYS old",
     )
     parser.add_argument("--sort", choices=("path", "age", "marker"), default="path")
-    parser.add_argument("--format", choices=("text", "json", "markdown", "summary"), default="text")
+    parser.add_argument(
+        "--format",
+        choices=("text", "json", "markdown", "summary", "sarif"),
+        default="text",
+    )
     parser.add_argument("--fail-on-findings", action="store_true", help="exit 1 when markers are found")
     baseline = parser.add_mutually_exclusive_group()
     baseline.add_argument("--baseline", type=Path, help="report only findings absent from this baseline")
@@ -144,6 +149,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(render_markdown(findings, root), end="")
     elif args.format == "summary":
         print(render_summary(findings, root))
+    elif args.format == "sarif":
+        print(render_sarif(findings))
     else:
         print(render_text(findings, root))
     return 1 if findings and args.fail_on_findings else 0

@@ -17,6 +17,7 @@ from debtmark.cli import (
     new_since_baseline,
     read_baseline,
     render_markdown,
+    render_sarif,
     render_summary,
     scan,
     select_findings,
@@ -156,6 +157,29 @@ class RenderAndCliTests(unittest.TestCase):
         self.assertIn("<30d     1", output)
         self.assertIn(">=365d   1", output)
         self.assertIn("unknown  1", output)
+
+    def test_sarif_contains_rules_locations_and_age_properties(self) -> None:
+        findings = [
+            Finding(
+                "src/a.py",
+                7,
+                "TODO",
+                "# TODO: remove shim",
+                "2025-01-01T00:00:00+00:00",
+                90,
+            ),
+            Finding("src/b.py", 2, "FIXME", "# FIXME: race"),
+        ]
+
+        payload = json.loads(render_sarif(findings))
+
+        self.assertEqual(payload["version"], "2.1.0")
+        run = payload["runs"][0]
+        self.assertEqual([rule["id"] for rule in run["tool"]["driver"]["rules"]], ["FIXME", "TODO"])
+        first = run["results"][0]
+        self.assertEqual(first["locations"][0]["physicalLocation"]["artifactLocation"]["uri"], "src/a.py")
+        self.assertEqual(first["locations"][0]["physicalLocation"]["region"]["startLine"], 7)
+        self.assertEqual(first["properties"]["ageDays"], 90)
 
     def test_json_and_fail_exit(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

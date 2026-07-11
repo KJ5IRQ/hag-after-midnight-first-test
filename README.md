@@ -23,6 +23,7 @@ $ debtmark . --min-age 180 --sort age
 $ debtmark . --format json
 $ debtmark . --format markdown > debt-report.md
 $ debtmark . --git-age --format summary
+$ debtmark . --format sarif > debtmark.sarif
 $ debtmark . --marker NOTE --marker DEPRECATED
 $ debtmark . --exclude fixtures --fail-on-findings
 $ debtmark . --write-baseline .debtmark-baseline.json
