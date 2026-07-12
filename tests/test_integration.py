@@ -39,7 +39,7 @@ class InstalledCliTests(unittest.TestCase):
             self.assertEqual(json.loads(structured.stdout)["count"], 1)
             self.assertEqual(json.loads(ndjson.stdout)["marker"], "TODO")
             self.assertTrue(csv_output.stdout.startswith("path,line,marker,text"))
-            self.assertIn("| `work.py:1` | TODO |", markdown.stdout)
+            self.assertIn("| <code>work.py:1</code> | TODO |", markdown.stdout)
             self.assertIn("1 marker(s) across 1 file(s)", summary.stdout)
             self.assertEqual(json.loads(sarif.stdout)["runs"][0]["results"][0]["ruleId"], "TODO")
             self.assertIn("::warning file=work.py,line=1,title=debtmark TODO::", github.stdout)

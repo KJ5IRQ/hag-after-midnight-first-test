@@ -35,3 +35,7 @@ Verification: `python -m unittest discover -s tests -v` succeeds in the fresh wh
 ## 6. Keep version tests single-sourced
 
 - [x] Remove the hard-coded CLI version expectation from the test while retaining the separate runtime-to-project metadata consistency assertion. Validate against the installed wheel, record, commit, and push without another release bump.
+
+## 7. Render Markdown table values faithfully
+
+- [x] Replace Markdown backslash escaping with HTML escaping plus pipe entities so paths and custom markers containing pipes display without a spurious backslash while retaining table structure. Cover the rendered source, release 0.7.4, and verify an installed wheel.

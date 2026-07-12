@@ -5,12 +5,18 @@ from __future__ import annotations
 from collections import Counter
 import csv
 from dataclasses import asdict
+import html
 import io
 import json
 from pathlib import Path
 from typing import Sequence
 
 from .core import Finding
+
+
+def _markdown_cell(value: str) -> str:
+    """Escape HTML and table separators without changing the rendered value."""
+    return html.escape(value).replace("|", "&#124;")
 
 
 def render_text(findings: Sequence[Finding], root: Path) -> str:
@@ -27,10 +33,10 @@ def render_markdown(findings: Sequence[Finding], root: Path) -> str:
         return "\n".join(lines) + "No debt markers found.\n"
     lines += ["| Location | Marker | Age | Text |", "|---|---:|---:|---|"]
     for item in findings:
-        location = f"`{item.path}:{item.line}`".replace("|", "\\|")
+        location = f"<code>{_markdown_cell(f'{item.path}:{item.line}')}</code>"
         age = f"{item.age_days}d" if item.age_days is not None else "—"
-        text = item.text.replace("|", "\\|")
-        marker = item.marker.replace("|", "\\|")
+        text = _markdown_cell(item.text)
+        marker = _markdown_cell(item.marker)
         lines.append(f"| {location} | {marker} | {age} | {text} |")
     return "\n".join(lines) + "\n"
 

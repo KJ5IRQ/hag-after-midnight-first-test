@@ -315,10 +315,14 @@ class RenderAndCliTests(unittest.TestCase):
 
     def test_markdown_escapes_table_pipes(self) -> None:
         output = render_markdown(
-            [Finding("a|b.py", 3, "DEBT|OPS", "# DEBT|OPS: a | b")], Path("/repo")
+            [Finding("a|<b>.py", 3, "DEBT|OPS", "# DEBT|OPS: a | <b>")], Path("/repo")
         )
 
-        self.assertIn("| `a\\|b.py:3` | DEBT\\|OPS | — | # DEBT\\|OPS: a \\| b |", output)
+        self.assertIn(
+            "| <code>a&#124;&lt;b&gt;.py:3</code> | DEBT&#124;OPS | — | "
+            "# DEBT&#124;OPS: a &#124; &lt;b&gt; |",
+            output,
+        )
     def test_summary_groups_markers_files_and_age_buckets(self) -> None:
         findings = [
             Finding("a.py", 1, "TODO", "young", age_days=2),

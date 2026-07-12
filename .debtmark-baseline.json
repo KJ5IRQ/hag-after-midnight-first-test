@@ -112,7 +112,7 @@
     {
       "path": "tests/test_integration.py",
       "marker": "TODO",
-      "text": "self.assertIn(\"| `work.py:1` | TODO |\", markdown.stdout)",
+      "text": "self.assertIn(\"| <code>work.py:1</code> | TODO |\", markdown.stdout)",
       "count": 1
     }
   ]

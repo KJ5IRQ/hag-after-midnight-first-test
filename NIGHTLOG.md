@@ -301,3 +301,15 @@ and the installed 0.7.3 wheel suite (45) passed, as did the ratchet. No release
 version changed for this test-only cleanup. The commit remains local because the
 HTTPS remote still has no credentials.
 
+### Markdown display correction — 0.7.4
+
+The initial table-separator fix used Markdown backslashes. That kept table parsing
+intact but made a backslash visible inside the location code span. Markdown cells
+now HTML-escape their values and represent separators as `&#124;`; browsers render
+the original pipes while the source has no literal separator to split a cell. The
+regression covers pipes and HTML-significant path/text characters. A fresh 0.7.4
+wheel printed its version and passed all 45 tests. Refreshing the ratchet changed
+only the intentional integration assertion text for the new `<code>` location
+rendering; the post-refresh ratchet exits 0. The patch commit remains local because
+the HTTPS remote still has no credentials.
+
