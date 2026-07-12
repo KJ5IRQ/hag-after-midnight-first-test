@@ -73,6 +73,19 @@ class ScanTests(unittest.TestCase):
 
             self.assertEqual(len(findings), 1)
 
+    def test_overlapping_markers_prefer_longest_literal(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "notes").write_text(
+                "DEBT-SECURITY audit this\nDEBT ordinary\n", encoding="utf-8"
+            )
+
+            findings = scan(root, markers=("DEBT", "DEBT-SECURITY"))
+
+            self.assertEqual(
+                [finding.marker for finding in findings], ["DEBT-SECURITY", "DEBT"]
+            )
+
     def test_empty_marker_sequence_finds_nothing(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

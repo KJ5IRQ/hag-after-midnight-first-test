@@ -143,3 +143,11 @@ runs the installed wheel against that ratchet. This is better evidence than anot
 output mode: the adoption workflow is now exercised on every change, and a new marker
 cannot drift in unnoticed. The development instructions include the same check and
 state plainly when refreshing the baseline is appropriate.
+
+### Overlapping marker correctness
+
+Reviewing custom tokenization exposed a small deterministic bug: regex alternation
+preferred configuration order, so markers such as `DEBT` and `DEBT-SECURITY` could
+mislabel the longer token as the shorter one. Marker literals are now compiled
+longest-first. Textual order across a line remains unchanged; only ties at the same
+position become more specific.

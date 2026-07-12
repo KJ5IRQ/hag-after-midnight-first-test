@@ -15,6 +15,8 @@ All notable changes are recorded here. The project follows Semantic Versioning.
 
 - Policy files no longer exclude unrelated files with the same basename elsewhere
   in the scanned tree.
+- Overlapping custom markers now report the longest matching literal regardless of
+  configuration order.
 
 ## 0.5.0 — 2026-07-11
 

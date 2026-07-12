@@ -142,6 +142,7 @@ cannot be combined with an explicit `--files` option.
 ## Design limits
 
 - Markers are whole words and case-insensitive.
+- When custom markers overlap at the same position, the longest marker wins.
 - Scanning is lexical, not language-aware: marker text in strings and documentation
   is reported. Exclude such paths or capture them in a baseline when intentional.
 - A line containing several markers is reported once, under the first marker.

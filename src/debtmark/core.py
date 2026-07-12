@@ -205,8 +205,13 @@ def scan(
     root = root.resolve()
     if not markers:
         return []
+    # Prefer the most specific literal when configured markers share a prefix.
+    # Regex alternation otherwise makes ("DEBT", "DEBT-SECURITY") report the
+    # shorter marker merely because it was listed first.
     marker_pattern = re.compile(
-        r"(?<!\w)(" + "|".join(re.escape(marker) for marker in markers) + r")(?!\w)",
+        r"(?<!\w)("
+        + "|".join(re.escape(marker) for marker in sorted(markers, key=len, reverse=True))
+        + r")(?!\w)",
         re.IGNORECASE,
     )
     current_time = now or datetime.now(timezone.utc)
