@@ -105,9 +105,11 @@ Keep exceptions beside the code when excluding an entire path would be too broad
 compatibility = "TODO"  # debtmark: ignore
 # debtmark: ignore-next-line
 example = "FIXME: shown in documentation"
+# debtmark: ignore-next 3 lines
 ```
 
 Put `debtmark: ignore-file` anywhere in a file to suppress that file completely.
+Use `debtmark: ignore-next N lines` when an intentional example spans several lines.
 Directives are case-insensitive and lexical, like marker scanning itself.
 
 ## Repository policy

@@ -130,3 +130,7 @@ root `policy.json` baseline silently hid every unrelated `policy.json` below it.
 Ignore patterns now accept a leading `/` as a scan-root anchor. Internal policy files
 use those exact patterns rather than global basename exclusions. The regression suite
 covers both public anchoring and baseline basename collisions and stands at 36 tests.
+
+The suppression boundary had one small, previously recorded gap: examples spanning
+several lines required a directive on every line. `debtmark: ignore-next N lines` now
+handles that case while the original `ignore-next-line` spelling remains compatible.

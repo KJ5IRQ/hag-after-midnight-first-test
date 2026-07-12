@@ -32,7 +32,9 @@ BINARY_SAMPLE_SIZE = 8192
 MAX_FILE_SIZE = 2 * 1024 * 1024
 IGNORE_FILE_PATTERN = re.compile(r"\bdebtmark:\s*ignore-file\b", re.IGNORECASE)
 IGNORE_LINE_PATTERN = re.compile(r"\bdebtmark:\s*ignore(?:\s|$)", re.IGNORECASE)
-IGNORE_NEXT_PATTERN = re.compile(r"\bdebtmark:\s*ignore-next-line\b", re.IGNORECASE)
+IGNORE_NEXT_PATTERN = re.compile(
+    r"\bdebtmark:\s*ignore-next(?:-line|\s+(\d+)\s+lines?)\b", re.IGNORECASE
+)
 
 
 @dataclass(frozen=True)
@@ -227,13 +229,15 @@ def scan(
         if any(IGNORE_FILE_PATTERN.search(line) for line in lines):
             continue
         matches: list[tuple[int, str, re.Match[str]]] = []
-        ignore_next = False
+        ignored_lines = 0
         for number, text in enumerate(lines, 1):
-            if ignore_next:
-                ignore_next = False
+            if ignored_lines:
+                ignored_lines -= 1
                 continue
-            if IGNORE_NEXT_PATTERN.search(text):
-                ignore_next = True
+            ignore_next = IGNORE_NEXT_PATTERN.search(text)
+            if ignore_next:
+                count = ignore_next.group(1)
+                ignored_lines = int(count) if count is not None else 1
                 continue
             if IGNORE_LINE_PATTERN.search(text):
                 continue

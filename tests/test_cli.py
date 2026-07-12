@@ -102,6 +102,24 @@ class ScanTests(unittest.TestCase):
                 [(1, "TODO"), (5, "HACK")],
             )
 
+    def test_suppression_directive_can_skip_several_lines(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "lines.py").write_text(
+                "# debtmark: ignore-next 3 lines\n"
+                "# TODO: hidden\n"
+                "ordinary line\n"
+                "# FIXME: hidden too\n"
+                "# HACK: visible\n",
+                encoding="utf-8",
+            )
+
+            findings = scan(root)
+
+            self.assertEqual(
+                [(finding.line, finding.marker) for finding in findings], [(5, "HACK")]
+            )
+
     def test_git_age_uses_blame_timestamp(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
