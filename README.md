@@ -88,8 +88,10 @@ fixtures/snapshots
 src/*.generated.py
 ```
 
-This is intentionally a small glob format, not a clone of `.gitignore`: negation and
-escaped comments are not supported. Use `--ignore-file PATH` to select another file.
+Prefix a pattern with `/` to anchor it at the scan root; for example,
+`/generated` does not also ignore `docs/generated`. This is intentionally a small
+glob format, not a clone of `.gitignore`: negation and escaped comments are not
+supported. Use `--ignore-file PATH` to select another file.
 
 In a Git work tree, `--files git` scans tracked files plus untracked files not ignored
 by Git. `--files tracked` scans only files in the index. Both modes still apply

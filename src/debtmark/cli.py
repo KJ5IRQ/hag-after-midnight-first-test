@@ -119,7 +119,16 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _load_ignore_patterns(args: argparse.Namespace, root: Path, excludes: list[str]) -> tuple[str, ...] | None:
+def _root_anchored_pattern(path: Path, root: Path) -> str | None:
+    """Return an ignore pattern for one path below root, without basename collisions."""
+    try:
+        relative = path.resolve().relative_to(root)
+    except ValueError:
+        return None
+    return "/" + relative.as_posix()
+
+
+def _load_ignore_patterns(args: argparse.Namespace, root: Path) -> tuple[str, ...] | None:
     ignore_file = args.ignore_file
     explicit_ignore_file = ignore_file is not None
     if ignore_file is None:
@@ -130,10 +139,8 @@ def _load_ignore_patterns(args: argparse.Namespace, root: Path, excludes: list[s
         except (OSError, UnicodeError) as error:
             print(f"debtmark: cannot read ignore file {ignore_file}: {error}", file=sys.stderr)
             return None
-        resolved_ignore = ignore_file.resolve()
-        if resolved_ignore.parent == root or root in resolved_ignore.parents:
-            excludes.append(ignore_file.name)
-        return patterns
+        own_pattern = _root_anchored_pattern(ignore_file, root)
+        return (*patterns, *((own_pattern,) if own_pattern else ()))
     if explicit_ignore_file:
         print(f"debtmark: ignore file not found: {ignore_file}", file=sys.stderr)
         return None
@@ -162,18 +169,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     markers = tuple(args.markers or config.markers or DEFAULT_MARKERS)
     baseline_path = args.baseline or args.write_baseline
     excludes = [*DEFAULT_EXCLUDES, *config.excludes, *args.exclude]
-    resolved_config = config_path.resolve()
-    if resolved_config.parent == root or root in resolved_config.parents:
-        excludes.append(config_path.name)
-    if baseline_path is not None:
-        resolved_baseline = baseline_path.resolve()
-        if resolved_baseline.parent == root or root in resolved_baseline.parents:
-            excludes.append(baseline_path.name)
+    internal_ignores = []
+    for policy_path in (config_path, baseline_path):
+        if policy_path is not None:
+            pattern = _root_anchored_pattern(policy_path, root)
+            if pattern:
+                internal_ignores.append(pattern)
 
-    ignore_patterns = _load_ignore_patterns(args, root, excludes)
+    ignore_patterns = _load_ignore_patterns(args, root)
     if ignore_patterns is None:
         return 2
-    ignore_patterns = (*ignore_patterns, *config.ignore)
+    ignore_patterns = (*ignore_patterns, *config.ignore, *internal_ignores)
     min_age = args.min_age if args.min_age is not None else config.min_age
     sort_order = args.sort or config.sort or "path"
     output_format = args.format or config.format or "text"

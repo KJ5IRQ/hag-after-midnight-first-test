@@ -118,3 +118,15 @@ without evidence of a real shortcoming. The highest-value unbuilt items are:
 - A configurable minimum-marker regex mode for customized tokenization.
 - An ignore-next-N-line directive for suppression flexibility.
 - Real-world benchmarks on large old repositories outside this sandbox.
+
+## 2026-07-12 — anchored policy paths
+
+The first external dogfood run succeeded against Click: three `XXX` matches across
+two tracked files, including one 323-day-old source comment. More useful than another
+report format was a policy-path correctness flaw found while reviewing the scan
+boundary. Debtmark excluded its config, baseline, and ignore files by basename, so a
+root `policy.json` baseline silently hid every unrelated `policy.json` below it.
+
+Ignore patterns now accept a leading `/` as a scan-root anchor. Internal policy files
+use those exact patterns rather than global basename exclusions. The regression suite
+covers both public anchoring and baseline basename collisions and stands at 36 tests.

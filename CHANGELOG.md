@@ -8,6 +8,12 @@ All notable changes are recorded here. The project follows Semantic Versioning.
 
 - Count-only and silent report modes for shell and CI checks.
 - Top-five file concentration in summary reports.
+- Root-anchored ignore patterns using a leading slash.
+
+### Fixed
+
+- Policy files no longer exclude unrelated files with the same basename elsewhere
+  in the scanned tree.
 
 ## 0.5.0 — 2026-07-11
 

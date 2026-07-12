@@ -177,6 +177,17 @@ class ScanTests(unittest.TestCase):
 
             self.assertEqual([finding.path for finding in findings], ["src/keep.py"])
 
+    def test_anchored_ignore_patterns_only_match_from_root(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "policy.json").write_text("TODO hidden\n", encoding="utf-8")
+            (root / "nested").mkdir()
+            (root / "nested" / "policy.json").write_text("TODO visible\n", encoding="utf-8")
+
+            findings = scan(root, ignore_patterns=("/policy.json",))
+
+            self.assertEqual([finding.path for finding in findings], ["nested/policy.json"])
+
     def test_triage_filters_unknown_ages_and_sorts_oldest_first(self) -> None:
         findings = [
             Finding("a.py", 1, "TODO", "new", age_days=2),
@@ -372,6 +383,20 @@ class RenderAndCliTests(unittest.TestCase):
 
             self.assertEqual(counts[("x.py", "TODO", "# TODO same")], 2)
             self.assertEqual(new_since_baseline(findings, counts), [])
+
+    def test_policy_files_do_not_exclude_unrelated_same_named_files(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            baseline = root / "policy.json"
+            nested = root / "nested"
+            nested.mkdir()
+            (nested / "policy.json").write_text("# TODO visible\n", encoding="utf-8")
+
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(main([directory, "--write-baseline", str(baseline)]), 0)
+
+            counts = read_baseline(baseline)
+            self.assertEqual(counts[("nested/policy.json", "TODO", "# TODO visible")], 1)
 
     def test_failed_baseline_replace_preserves_original_and_cleans_temp_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
