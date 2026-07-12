@@ -2,6 +2,13 @@
 
 All notable changes are recorded here. The project follows Semantic Versioning.
 
+## 0.7.7 — 2026-07-12
+
+### Fixed
+
+- Age-enabled scans outside Git work trees no longer launch one failed blame process
+  for every marked file.
+
 ## 0.7.6 — 2026-07-12
 
 ### Fixed
