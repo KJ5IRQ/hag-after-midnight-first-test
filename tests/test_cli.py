@@ -297,7 +297,7 @@ class RenderAndCliTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as stopped:
             main(["--version"])
         self.assertEqual(stopped.exception.code, 0)
-        self.assertEqual(output.getvalue(), "debtmark 0.7.3\n")
+        self.assertEqual(output.getvalue(), f"debtmark {__version__}\n")
 
     @unittest.skipIf(sys.version_info < (3, 11), "tomllib was added in Python 3.11")
     def test_runtime_version_matches_project_metadata(self) -> None:

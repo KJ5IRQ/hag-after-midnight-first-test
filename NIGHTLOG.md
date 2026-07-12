@@ -290,3 +290,14 @@ escape table separators. The regression fixture covers a path and marker contain
 baseline ratchet. The patch commit remains local because the HTTPS remote still has
 no credentials.
 
+### Version-test cleanup
+
+The CLI version test had a third, hard-coded copy of the release number. The
+separate `tomllib` test already asserts that the runtime declaration equals project
+metadata, so that literal only created routine release churn. The CLI test now
+compares against `debtmark.__version__`, preserving coverage of CLI wiring while
+leaving metadata consistency to its focused test. Both the source unit suite (36)
+and the installed 0.7.3 wheel suite (45) passed, as did the ratchet. No release
+version changed for this test-only cleanup. The commit remains local because the
+HTTPS remote still has no credentials.
+

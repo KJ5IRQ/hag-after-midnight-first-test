@@ -31,3 +31,7 @@ Verification: `python -m unittest discover -s tests -v` succeeds in the fresh wh
 ## 5. Preserve Markdown table structure for arbitrary markers and paths
 
 - [x] Escape table separators in Markdown location and marker cells, not only finding text. Add regression coverage, release 0.7.3, and verify the installed artifact.
+
+## 6. Keep version tests single-sourced
+
+- [x] Remove the hard-coded CLI version expectation from the test while retaining the separate runtime-to-project metadata consistency assertion. Validate against the installed wheel, record, commit, and push without another release bump.
