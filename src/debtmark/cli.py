@@ -22,7 +22,15 @@ from .core import (
     scan,
     select_findings,
 )
-from .report import render_github, render_markdown, render_sarif, render_summary, render_text
+from .report import (
+    render_csv,
+    render_github,
+    render_markdown,
+    render_ndjson,
+    render_sarif,
+    render_summary,
+    render_text,
+)
 
 # These imports are intentionally public here for compatibility with the original
 # single-module API. New library users should import from core, baseline, or report.
@@ -33,8 +41,10 @@ __all__ = [
     "main",
     "new_since_baseline",
     "read_baseline",
+    "render_csv",
     "render_github",
     "render_markdown",
+    "render_ndjson",
     "render_sarif",
     "render_summary",
     "render_text",
@@ -95,7 +105,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--sort", choices=("path", "age", "marker"), default="path")
     parser.add_argument(
         "--format",
-        choices=("text", "json", "markdown", "summary", "sarif", "github"),
+        choices=("text", "json", "ndjson", "csv", "markdown", "summary", "sarif", "github"),
         default="text",
     )
     parser.add_argument("--fail-on-findings", action="store_true", help="exit 1 when markers are found")
@@ -208,6 +218,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                 indent=2,
             )
         )
+    elif args.format == "ndjson":
+        print(render_ndjson(findings))
+    elif args.format == "csv":
+        print(render_csv(findings), end="")
     elif args.format == "markdown":
         print(render_markdown(findings, root), end="")
     elif args.format == "summary":

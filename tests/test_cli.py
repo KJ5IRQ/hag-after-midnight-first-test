@@ -18,8 +18,10 @@ from debtmark.cli import (
     main,
     new_since_baseline,
     read_baseline,
+    render_csv,
     render_github,
     render_markdown,
+    render_ndjson,
     render_sarif,
     render_summary,
     scan,
@@ -260,6 +262,17 @@ class RenderAndCliTests(unittest.TestCase):
             "::warning file=src/a%2Cb.py,line=7,title=debtmark TODO::"
             "# TODO: 50%25 done%0Anext",
         )
+
+    def test_csv_and_ndjson_preserve_structured_text(self) -> None:
+        findings = [Finding("café.py", 3, "TODO", "# TODO: a, b")]
+
+        csv_output = render_csv(findings)
+        ndjson_output = render_ndjson(findings)
+
+        self.assertEqual(csv_output.splitlines()[0], "path,line,marker,text,committed_at,age_days")
+        self.assertIn('café.py,3,TODO,"# TODO: a, b",,', csv_output)
+        self.assertEqual(json.loads(ndjson_output)["path"], "café.py")
+        self.assertIn("café.py", ndjson_output)
 
     def test_json_and_fail_exit(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

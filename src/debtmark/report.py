@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from collections import Counter
+import csv
+from dataclasses import asdict
+import io
 import json
 from pathlib import Path
 from typing import Sequence
@@ -62,6 +65,22 @@ def render_summary(findings: Sequence[Finding], root: Path) -> str:
             if count:
                 lines.append(f"  {label:<7}  {count}")
     return "\n".join(lines)
+
+
+def render_csv(findings: Sequence[Finding]) -> str:
+    """Render findings as RFC 4180-style CSV with a stable column order."""
+    output = io.StringIO(newline="")
+    fields = ("path", "line", "marker", "text", "committed_at", "age_days")
+    writer = csv.DictWriter(output, fieldnames=fields, lineterminator="\n")
+    writer.writeheader()
+    for finding in findings:
+        writer.writerow(asdict(finding))
+    return output.getvalue()
+
+
+def render_ndjson(findings: Sequence[Finding]) -> str:
+    """Render one JSON finding per line for streaming consumers."""
+    return "\n".join(json.dumps(asdict(finding), ensure_ascii=False) for finding in findings)
 
 
 def _github_escape(value: str, *, property_value: bool = False) -> str:

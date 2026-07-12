@@ -27,6 +27,8 @@ class InstalledCliTests(unittest.TestCase):
 
             text = self.run_debtmark(root)
             structured = self.run_debtmark(root, "--format", "json")
+            ndjson = self.run_debtmark(root, "--format", "ndjson")
+            csv_output = self.run_debtmark(root, "--format", "csv")
             markdown = self.run_debtmark(root, "--format", "markdown")
             summary = self.run_debtmark(root, "--format", "summary")
             sarif = self.run_debtmark(root, "--format", "sarif")
@@ -35,6 +37,8 @@ class InstalledCliTests(unittest.TestCase):
             self.assertEqual(text.returncode, 0, text.stderr)
             self.assertIn("work.py:1: TODO", text.stdout)
             self.assertEqual(json.loads(structured.stdout)["count"], 1)
+            self.assertEqual(json.loads(ndjson.stdout)["marker"], "TODO")
+            self.assertTrue(csv_output.stdout.startswith("path,line,marker,text"))
             self.assertIn("| `work.py:1` | TODO |", markdown.stdout)
             self.assertIn("1 marker(s) across 1 file(s)", summary.stdout)
             self.assertEqual(json.loads(sarif.stdout)["runs"][0]["results"][0]["ruleId"], "TODO")
