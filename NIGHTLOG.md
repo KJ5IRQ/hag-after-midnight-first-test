@@ -242,3 +242,16 @@ that installed wheel. The exact tracked-file baseline ratchet exited 0 with no
 new findings, so the baseline was not changed. The release commit is local: the
 sandbox's HTTPS remote has no GitHub credentials, so the push was refused.
 
+### Release CI now tests the release artifact
+
+Dogfooding the released wheel against this checkout found 19 baseline-covered
+markers across five files; all are younger than 30 days and the committed ratchet
+still exits successfully. The useful release-process gap was narrower: the release
+workflow built a wheel and imported one symbol, but did not exercise the test suite
+against that artifact. It now installs the wheel in its fresh virtual environment,
+checks the console version outside the checkout, then runs all unit and integration
+tests with that environment's interpreter. Local reproduction built both 0.7.0
+archives, installed the wheel into a new external virtual environment, and passed
+all 44 tests. The workflow YAML parses, and the tracked baseline check still exits
+0. This CI commit is also local because the HTTPS remote still has no credentials.
+

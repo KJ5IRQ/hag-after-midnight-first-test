@@ -13,3 +13,8 @@ The repository is clean at `aaf926a`; 0.6.0 is released and the custom marker-re
 Expected outcome: source metadata, runtime `--version`, changelog, and built distributions all identify 0.7.0; the regex feature has a finished release boundary and future version drift is caught automatically.
 
 Verification: `python -m unittest discover -s tests -v` succeeds in the fresh wheel environment; both distributions build; the installed CLI prints `debtmark 0.7.0`; archive inspection is clean; the baseline self-check exits 0; and `git status --short` is empty after the release commit.
+
+## 2. Exercise the distribution in release CI
+
+- [x] Extend `.github/workflows/release.yml` so its fresh wheel environment runs the complete unit and integration suite, not merely an import smoke test. Keep the test interpreter outside the checkout and leave artifact publication unchanged.
+- [x] Validate the workflow YAML and reproduce the installed-wheel test command locally. Record the result in `NIGHTLOG.md`, commit, and push.
