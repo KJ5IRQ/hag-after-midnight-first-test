@@ -2,6 +2,12 @@
 
 All notable changes are recorded here. The project follows Semantic Versioning.
 
+## 0.7.5 — 2026-07-12
+
+### Fixed
+
+- SARIF artifact locations now percent-encode special and Unicode path characters.
+
 ## 0.7.4 — 2026-07-12
 
 ### Fixed

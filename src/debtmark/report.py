@@ -10,6 +10,7 @@ import io
 import json
 from pathlib import Path
 from typing import Sequence
+from urllib.parse import quote
 
 from .core import Finding
 
@@ -143,7 +144,7 @@ def render_sarif(findings: Sequence[Finding]) -> str:
             "locations": [
                 {
                     "physicalLocation": {
-                        "artifactLocation": {"uri": finding.path},
+                        "artifactLocation": {"uri": quote(finding.path, safe="/")},
                         "region": {"startLine": finding.line},
                     }
                 }

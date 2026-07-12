@@ -345,10 +345,10 @@ class RenderAndCliTests(unittest.TestCase):
     def test_sarif_contains_rules_locations_and_age_properties(self) -> None:
         findings = [
             Finding(
-                "src/a.py",
+                "src/a b#café%/d.py",
                 7,
-                "TODO",
-                "# TODO: remove shim",
+                "DEBT",
+                "# DEBT: remove shim",
                 "2025-01-01T00:00:00+00:00",
                 90,
             ),
@@ -359,9 +359,12 @@ class RenderAndCliTests(unittest.TestCase):
 
         self.assertEqual(payload["version"], "2.1.0")
         run = payload["runs"][0]
-        self.assertEqual([rule["id"] for rule in run["tool"]["driver"]["rules"]], ["FIXME", "TODO"])
+        self.assertEqual([rule["id"] for rule in run["tool"]["driver"]["rules"]], ["DEBT", "FIXME"])
         first = run["results"][0]
-        self.assertEqual(first["locations"][0]["physicalLocation"]["artifactLocation"]["uri"], "src/a.py")
+        self.assertEqual(
+            first["locations"][0]["physicalLocation"]["artifactLocation"]["uri"],
+            "src/a%20b%23caf%C3%A9%25/d.py",
+        )
         self.assertEqual(first["locations"][0]["physicalLocation"]["region"]["startLine"], 7)
         self.assertEqual(first["properties"]["ageDays"], 90)
 

@@ -313,3 +313,13 @@ only the intentional integration assertion text for the new `<code>` location
 rendering; the post-refresh ratchet exits 0. The patch commit remains local because
 the HTTPS remote still has no credentials.
 
+### SARIF URI correction — 0.7.5
+
+SARIF artifact locations are URIs, but the renderer wrote raw relative filesystem
+paths. Spaces, `#`, `%`, and Unicode therefore produced invalid or ambiguous
+references in code-scanning consumers. Artifact paths now use UTF-8 percent
+encoding while retaining `/` separators. Regression coverage exercises each class
+of character. A fresh 0.7.5 wheel printed its version and passed all 45 tests plus
+the baseline ratchet. The patch commit remains local because the HTTPS remote still
+has no credentials.
+

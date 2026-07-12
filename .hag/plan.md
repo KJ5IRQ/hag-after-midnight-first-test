@@ -39,3 +39,7 @@ Verification: `python -m unittest discover -s tests -v` succeeds in the fresh wh
 ## 7. Render Markdown table values faithfully
 
 - [x] Replace Markdown backslash escaping with HTML escaping plus pipe entities so paths and custom markers containing pipes display without a spurious backslash while retaining table structure. Cover the rendered source, release 0.7.4, and verify an installed wheel.
+
+## 8. Emit valid SARIF artifact URIs
+
+- [x] Percent-encode relative artifact paths in SARIF output so spaces, fragments, percent signs, and Unicode remain paths rather than invalid or ambiguous URI syntax. Add regression coverage, release 0.7.5, and verify the installed wheel.
