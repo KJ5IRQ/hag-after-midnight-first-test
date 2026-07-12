@@ -255,3 +255,17 @@ archives, installed the wheel into a new external virtual environment, and passe
 all 44 tests. The workflow YAML parses, and the tracked baseline check still exits
 0. This CI commit is also local because the HTTPS remote still has no credentials.
 
+### Packaging metadata correction — 0.7.1
+
+A clean 0.7.0 build exposed setuptools' PEP 639 deprecation warning for the old
+license table. This was a concrete packaging defect, not a feature opportunity.
+The project now requires setuptools 77 or newer, declares the SPDX `MIT` license,
+and explicitly includes `LICENSE`. The metadata-only correction is versioned 0.7.1
+rather than silently rebuilding a released version with different metadata.
+
+Both 0.7.1 artifacts built in an isolated environment with setuptools 83 and no
+license deprecation warning. The wheel metadata contains `License-Expression: MIT`,
+`License-File: LICENSE`, and the packaged license. A fresh external wheel install
+reported `debtmark 0.7.1`; all 44 tests and the tracked baseline ratchet passed.
+The release commit remains local because the HTTPS remote still has no credentials.
+

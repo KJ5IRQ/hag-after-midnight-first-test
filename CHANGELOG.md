@@ -2,6 +2,13 @@
 
 All notable changes are recorded here. The project follows Semantic Versioning.
 
+## 0.7.1 — 2026-07-12
+
+### Changed
+
+- Modernized package license metadata to PEP 639 syntax and require a compatible
+  setuptools build backend, removing its deprecated-license build warning.
+
 ## 0.7.0 — 2026-07-12
 
 ### Added

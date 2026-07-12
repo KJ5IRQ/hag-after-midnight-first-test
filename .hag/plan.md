@@ -18,3 +18,8 @@ Verification: `python -m unittest discover -s tests -v` succeeds in the fresh wh
 
 - [x] Extend `.github/workflows/release.yml` so its fresh wheel environment runs the complete unit and integration suite, not merely an import smoke test. Keep the test interpreter outside the checkout and leave artifact publication unchanged.
 - [x] Validate the workflow YAML and reproduce the installed-wheel test command locally. Record the result in `NIGHTLOG.md`, commit, and push.
+
+## 3. Remove the package-build deprecation warning
+
+- [x] Move the project license declaration to PEP 639 syntax, require the setuptools version that supports it, and release the metadata-only correction as 0.7.1.
+- [x] Build both artifacts without the deprecated-license warning; inspect wheel metadata for the SPDX expression and packaged license; install the wheel outside the checkout and run the full suite plus the baseline check. Record, commit, and push.
