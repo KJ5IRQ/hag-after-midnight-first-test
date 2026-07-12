@@ -27,10 +27,11 @@ def render_markdown(findings: Sequence[Finding], root: Path) -> str:
         return "\n".join(lines) + "No debt markers found.\n"
     lines += ["| Location | Marker | Age | Text |", "|---|---:|---:|---|"]
     for item in findings:
-        location = f"`{item.path}:{item.line}`"
+        location = f"`{item.path}:{item.line}`".replace("|", "\\|")
         age = f"{item.age_days}d" if item.age_days is not None else "—"
         text = item.text.replace("|", "\\|")
-        lines.append(f"| {location} | {item.marker} | {age} | {text} |")
+        marker = item.marker.replace("|", "\\|")
+        lines.append(f"| {location} | {marker} | {age} | {text} |")
     return "\n".join(lines) + "\n"
 
 

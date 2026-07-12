@@ -27,3 +27,7 @@ Verification: `python -m unittest discover -s tests -v` succeeds in the fresh wh
 ## 4. Correct empty NDJSON output
 
 - [x] Make `--format ndjson` emit zero bytes when a scan has no findings rather than a blank non-JSON line. Add focused CLI coverage, release the behavior fix as 0.7.2, and verify a clean wheel install.
+
+## 5. Preserve Markdown table structure for arbitrary markers and paths
+
+- [x] Escape table separators in Markdown location and marker cells, not only finding text. Add regression coverage, release 0.7.3, and verify the installed artifact.

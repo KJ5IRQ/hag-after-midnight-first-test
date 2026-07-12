@@ -2,6 +2,12 @@
 
 All notable changes are recorded here. The project follows Semantic Versioning.
 
+## 0.7.3 — 2026-07-12
+
+### Fixed
+
+- Markdown reports now escape table separators in file paths and custom markers.
+
 ## 0.7.2 — 2026-07-12
 
 ### Fixed

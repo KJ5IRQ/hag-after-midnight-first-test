@@ -297,7 +297,7 @@ class RenderAndCliTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as stopped:
             main(["--version"])
         self.assertEqual(stopped.exception.code, 0)
-        self.assertEqual(output.getvalue(), "debtmark 0.7.2\n")
+        self.assertEqual(output.getvalue(), "debtmark 0.7.3\n")
 
     @unittest.skipIf(sys.version_info < (3, 11), "tomllib was added in Python 3.11")
     def test_runtime_version_matches_project_metadata(self) -> None:
@@ -314,9 +314,11 @@ class RenderAndCliTests(unittest.TestCase):
             self.assertEqual(entrypoint([]), 0)
 
     def test_markdown_escapes_table_pipes(self) -> None:
-        output = render_markdown([Finding("a.py", 3, "TODO", "# TODO: a | b")], Path("/repo"))
-        self.assertIn("a \\| b", output)
+        output = render_markdown(
+            [Finding("a|b.py", 3, "DEBT|OPS", "# DEBT|OPS: a | b")], Path("/repo")
+        )
 
+        self.assertIn("| `a\\|b.py:3` | DEBT\\|OPS | — | # DEBT\\|OPS: a \\| b |", output)
     def test_summary_groups_markers_files_and_age_buckets(self) -> None:
         findings = [
             Finding("a.py", 1, "TODO", "young", age_days=2),

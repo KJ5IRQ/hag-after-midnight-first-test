@@ -280,3 +280,13 @@ correct version and passed all 45 unit and integration tests; the baseline ratch
 also exited 0. The patch commit remains local because the HTTPS remote still has no
 credentials.
 
+### Markdown table escaping — 0.7.3
+
+Custom regex markers and valid Unix paths can contain `|`, the Markdown table
+separator. The Markdown renderer escaped that character in finding text but not in
+the location or marker cells, producing malformed reports. All three cells now
+escape table separators. The regression fixture covers a path and marker containing
+`|`; a fresh 0.7.3 wheel printed its version and passed all 45 tests plus the
+baseline ratchet. The patch commit remains local because the HTTPS remote still has
+no credentials.
+
