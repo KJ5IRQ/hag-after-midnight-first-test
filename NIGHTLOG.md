@@ -151,3 +151,10 @@ preferred configuration order, so markers such as `DEBT` and `DEBT-SECURITY` cou
 mislabel the longer token as the shorter one. Marker literals are now compiled
 longest-first. Textual order across a line remains unchanged; only ties at the same
 position become more specific.
+
+### Policy consistency
+
+Ignore-file patterns ending in a slash were normalized, but identical patterns in
+JSON policy or passed to the library were not. That made the natural `generated/`
+spelling depend on how policy reached the scanner. Matching now normalizes every
+source at the common boundary and ignores an empty slash-only pattern.

@@ -208,6 +208,17 @@ class ScanTests(unittest.TestCase):
 
             self.assertEqual([finding.path for finding in findings], ["src/keep.py"])
 
+    def test_ignore_directory_patterns_accept_trailing_slashes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "generated").mkdir()
+            (root / "generated" / "x.py").write_text("# TODO hidden\n", encoding="utf-8")
+            (root / "keep.py").write_text("# TODO visible\n", encoding="utf-8")
+
+            findings = scan(root, ignore_patterns=("generated/",))
+
+            self.assertEqual([finding.path for finding in findings], ["keep.py"])
+
     def test_anchored_ignore_patterns_only_match_from_root(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

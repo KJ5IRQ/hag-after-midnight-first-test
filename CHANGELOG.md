@@ -17,6 +17,8 @@ All notable changes are recorded here. The project follows Semantic Versioning.
   in the scanned tree.
 - Overlapping custom markers now report the longest matching literal regardless of
   configuration order.
+- Ignore patterns supplied by configuration or the library now accept trailing
+  slashes consistently with patterns read from ignore files.
 
 ## 0.5.0 — 2026-07-11
 

@@ -59,7 +59,12 @@ def read_ignore_file(path: Path) -> tuple[str, ...]:
 
 def _matches_ignore(relative: str, patterns: Sequence[str]) -> bool:
     parts = relative.split("/")
-    for pattern in patterns:
+    for raw_pattern in patterns:
+        # Ignore-file loading normalizes directory-style patterns, but config
+        # and library callers bypass that reader. Normalize at the shared seam.
+        pattern = raw_pattern.rstrip("/")
+        if not pattern:
+            continue
         if pattern.startswith("/"):
             anchored = pattern.removeprefix("/")
             if fnmatchcase(relative, anchored) or relative.startswith(anchored + "/"):
