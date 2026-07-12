@@ -280,7 +280,7 @@ class RenderAndCliTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as stopped:
             main(["--version"])
         self.assertEqual(stopped.exception.code, 0)
-        self.assertEqual(output.getvalue(), "debtmark 0.5.0\n")
+        self.assertEqual(output.getvalue(), "debtmark 0.6.0\n")
 
     def test_entrypoint_swallows_broken_pipe(self) -> None:
         with mock.patch("debtmark.cli.main", side_effect=BrokenPipeError):

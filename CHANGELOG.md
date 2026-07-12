@@ -4,6 +4,8 @@ All notable changes are recorded here. The project follows Semantic Versioning.
 
 ## Unreleased
 
+## 0.6.0 — 2026-07-12
+
 ### Added
 
 - Count-only and silent report modes for shell and CI checks.

@@ -175,3 +175,12 @@ does not. As a result, `debtmark app --changed HEAD` silently discarded changes 
 `app` and considered unrelated changes outside it. Changed-file discovery now asks
 Git for paths relative to the scan directory. A regression test changes files on
 both sides of that boundary.
+
+### Release closure
+
+The accumulated path-boundary, suppression, and self-baseline work is released as
+version 0.6.0. This is a maintenance release: no additional feature was invented to
+justify the version bump. The release boundary now matches the code already in use.
+The wheel built and passed a clean-environment install and version probe. The release
+commit remains local because the sandbox had no credentials for the HTTPS remote;
+the next session should push it before starting new work.
