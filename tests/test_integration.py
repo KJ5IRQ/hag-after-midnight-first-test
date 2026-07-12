@@ -76,6 +76,28 @@ class InstalledCliTests(unittest.TestCase):
             self.assertEqual(result.returncode, 2)
             self.assertIn("marker must not be empty", result.stderr)
 
+    def test_marker_regex_cli_and_config_override(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".debtmark-config.json").write_text(
+                json.dumps({"marker_regex": r"DEBT-[A-Z]+"}), encoding="utf-8"
+            )
+            (root / "work.py").write_text(
+                "# DEBT-API migrate\n# TODO ordinary\n", encoding="utf-8"
+            )
+
+            configured = self.run_debtmark(root, "--format", "json")
+            overridden = self.run_debtmark(root, "--marker", "TODO", "--format", "json")
+            invalid = self.run_debtmark(root, "--marker-regex", "[")
+            empty_match = self.run_debtmark(root, "--marker-regex", r"(?=DEBT)")
+
+            self.assertEqual(json.loads(configured.stdout)["findings"][0]["marker"], "DEBT-API")
+            self.assertEqual(json.loads(overridden.stdout)["findings"][0]["marker"], "TODO")
+            self.assertIn("invalid marker regex", invalid.stderr)
+            self.assertEqual(invalid.returncode, 2)
+            self.assertIn("must not produce empty matches", empty_match.stderr)
+            self.assertEqual(empty_match.returncode, 2)
+
     def test_git_file_mode_requires_a_work_tree(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             result = self.run_debtmark(Path(directory), "--files", "tracked")

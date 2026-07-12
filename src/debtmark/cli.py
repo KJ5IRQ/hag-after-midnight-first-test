@@ -73,6 +73,21 @@ def marker_value(value: str) -> str:
     return value
 
 
+def marker_regex_value(value: str) -> str:
+    """Argparse converter for a non-empty, consuming regular expression."""
+    import re
+
+    if not value:
+        raise argparse.ArgumentTypeError("marker regex must not be empty")
+    try:
+        pattern = re.compile(value, re.IGNORECASE)
+    except re.error as error:
+        raise argparse.ArgumentTypeError(f"invalid marker regex: {error}") from error
+    if pattern.match("") is not None:
+        raise argparse.ArgumentTypeError("marker regex must not match empty text")
+    return value
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="debtmark", description="Find TODO, FIXME, HACK, and XXX markers in a repository."
@@ -80,12 +95,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("path", nargs="?", default=".", type=Path)
     parser.add_argument("--config", type=Path, help="policy file (default: PATH/.debtmark-config.json)")
-    parser.add_argument(
+    marker_selection = parser.add_mutually_exclusive_group()
+    marker_selection.add_argument(
         "--marker",
         action="append",
         type=marker_value,
         dest="markers",
         help="marker to find; repeatable",
+    )
+    marker_selection.add_argument(
+        "--marker-regex",
+        type=marker_regex_value,
+        help="regex matching a complete custom marker (case-insensitive)",
     )
     parser.add_argument("--exclude", action="append", default=[], help="file or directory name to skip")
     parser.add_argument(
@@ -166,7 +187,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"debtmark: config file not found: {config_path}", file=sys.stderr)
         return 2
 
-    markers = tuple(args.markers or config.markers or DEFAULT_MARKERS)
+    marker_regex = args.marker_regex or (None if args.markers else config.marker_regex)
+    markers = tuple(
+        args.markers
+        or (() if marker_regex is not None else config.markers)
+        or DEFAULT_MARKERS
+    )
     baseline_path = args.baseline or args.write_baseline
     excludes = [*DEFAULT_EXCLUDES, *config.excludes, *args.exclude]
     internal_ignores = []
@@ -204,14 +230,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         if files is None:
             print(f"debtmark: file mode {file_mode} requires a Git work tree", file=sys.stderr)
             return 2
-    findings = scan(
-        root,
-        markers,
-        excludes,
-        needs_git_age,
-        ignore_patterns=ignore_patterns,
-        files=files,
-    )
+    try:
+        findings = scan(
+            root,
+            markers,
+            excludes,
+            needs_git_age,
+            ignore_patterns=ignore_patterns,
+            files=files,
+            marker_regex=marker_regex,
+        )
+    except ValueError as error:
+        print(f"debtmark: invalid marker regex: {error}", file=sys.stderr)
+        return 2
 
     if args.write_baseline:
         try:

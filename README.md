@@ -29,6 +29,7 @@ $ debtmark . --format markdown > debt-report.md
 $ debtmark . --git-age --format summary
 $ debtmark . --format sarif > debtmark.sarif
 $ debtmark . --marker NOTE --marker DEPRECATED
+$ debtmark . --marker-regex 'DEBT(?:\([a-z]+\)|-[a-z]+)'
 $ debtmark . --exclude fixtures --fail-on-findings
 $ debtmark . --write-baseline .debtmark-baseline.json
 $ debtmark . --baseline .debtmark-baseline.json --fail-on-findings
@@ -136,6 +137,12 @@ Unknown fields and malformed values are errors rather than silently ignored poli
 Explicit command-line marker, file, age, sort, and format options override configured
 defaults.
 
+For repositories with structured marker names, `--marker-regex` replaces literal
+whole-word matching with one case-insensitive regular expression. The complete match
+becomes the marker reported in output. Policy files can set the same mode with
+`"marker_regex"`; it is mutually exclusive with `"markers"`. Patterns that are
+invalid or match empty text are rejected.
+
 For pull-request checks, `--changed REVISION` restricts scanning to files added,
 copied, modified, or renamed relative to that Git revision. Untracked files are not
 part of a revision diff. An explicit `--changed` overrides configured file mode and
@@ -144,6 +151,7 @@ cannot be combined with an explicit `--files` option.
 ## Design limits
 
 - Markers are whole words and case-insensitive.
+- Marker regular expressions are case-insensitive and report the complete match.
 - When custom markers overlap at the same position, the longest marker wins.
 - Scanning is lexical, not language-aware: marker text in strings and documentation
   is reported. Exclude such paths or capture them in a baseline when intentional.

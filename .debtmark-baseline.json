@@ -46,6 +46,12 @@
     {
       "path": "tests/test_integration.py",
       "marker": "TODO",
+      "text": "\"# DEBT-API migrate\\n# TODO ordinary\\n\", encoding=\"utf-8\"",
+      "count": 1
+    },
+    {
+      "path": "tests/test_integration.py",
+      "marker": "TODO",
       "text": "(root / \"work.py\").write_text(\"# TODO ignored\\n# DEBT visible\\n\", encoding=\"utf-8\")",
       "count": 1
     },
@@ -70,7 +76,19 @@
     {
       "path": "tests/test_integration.py",
       "marker": "TODO",
+      "text": "overridden = self.run_debtmark(root, \"--marker\", \"TODO\", \"--format\", \"json\")",
+      "count": 1
+    },
+    {
+      "path": "tests/test_integration.py",
+      "marker": "TODO",
       "text": "self.assertEqual(json.loads(ndjson.stdout)[\"marker\"], \"TODO\")",
+      "count": 1
+    },
+    {
+      "path": "tests/test_integration.py",
+      "marker": "TODO",
+      "text": "self.assertEqual(json.loads(overridden.stdout)[\"findings\"][0][\"marker\"], \"TODO\")",
       "count": 1
     },
     {

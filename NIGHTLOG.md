@@ -184,3 +184,15 @@ justify the version bump. The release boundary now matches the code already in u
 The wheel built and passed a clean-environment install and version probe. The release
 commit remains local because the sandbox had no credentials for the HTTPS remote;
 the next session should push it before starting new work.
+
+### Custom tokenization
+
+The next recorded gap was real: literal whole-word markers cannot represent families
+such as `DEBT(api)` and `DEBT-SECURITY` without enumerating every team and category.
+Debtmark now accepts one case-insensitive marker regular expression from the CLI or
+repository policy. The complete match remains the marker identity, so existing
+sorting, baselines, and structured reports need no special case. Literal markers
+remain the default and explicit CLI marker selection overrides configured policy. The
+suite now has 43 tests, and a clean wheel install returned the two expected structured
+markers from a three-line smoke fixture. The work is committed locally; pushing over
+the HTTPS remote failed because this sandbox has no GitHub credentials.

@@ -93,6 +93,21 @@ class ScanTests(unittest.TestCase):
 
             self.assertEqual(scan(root, markers=()), [])
 
+    def test_marker_regex_supports_project_specific_tokenization(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "work.py").write_text(
+                "# debt(api): migrate\n# debt-ops: rotate\n# debt: too vague\n",
+                encoding="utf-8",
+            )
+
+            findings = scan(root, marker_regex=r"debt(?:\([a-z]+\)|-[a-z]+)")
+
+            self.assertEqual(
+                [(finding.line, finding.marker) for finding in findings],
+                [(1, "DEBT(API)"), (2, "DEBT-OPS")],
+            )
+
     def test_suppression_directives_skip_line_next_line_and_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

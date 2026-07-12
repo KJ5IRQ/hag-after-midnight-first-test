@@ -206,19 +206,24 @@ def scan(
     max_size: int = MAX_FILE_SIZE,
     ignore_patterns: Sequence[str] = (),
     files: Sequence[Path] | None = None,
+    marker_regex: str | None = None,
 ) -> list[Finding]:
     """Scan root and return debt markers in deterministic path/line order."""
     root = root.resolve()
-    if not markers:
+    if not markers and marker_regex is None:
         return []
     # Prefer the most specific literal when configured markers share a prefix.
     # Regex alternation otherwise makes ("DEBT", "DEBT-SECURITY") report the
     # shorter marker merely because it was listed first.
-    marker_pattern = re.compile(
-        r"(?<!\w)("
-        + "|".join(re.escape(marker) for marker in sorted(markers, key=len, reverse=True))
-        + r")(?!\w)",
-        re.IGNORECASE,
+    marker_pattern = (
+        re.compile(marker_regex, re.IGNORECASE)
+        if marker_regex is not None
+        else re.compile(
+            r"(?<!\w)("
+            + "|".join(re.escape(marker) for marker in sorted(markers, key=len, reverse=True))
+            + r")(?!\w)",
+            re.IGNORECASE,
+        )
     )
     current_time = now or datetime.now(timezone.utc)
     findings: list[Finding] = []
@@ -254,6 +259,8 @@ def scan(
                 continue
             match = marker_pattern.search(text)
             if match:
+                if marker_regex is not None and not match.group(0):
+                    raise ValueError("marker regex must not produce empty matches")
                 matches.append((number, text, match))
         timestamps = _git_timestamps(root, relative) if with_git_age and matches else {}
         for number, text, match in matches:
@@ -264,7 +271,14 @@ def scan(
                 committed_at = timestamp.isoformat()
                 age_days = max(0, (current_time - timestamp).days)
             findings.append(
-                Finding(relative, number, match.group(1).upper(), text.strip(), committed_at, age_days)
+                Finding(
+                    relative,
+                    number,
+                    (match.group(0) if marker_regex is not None else match.group(1)).upper(),
+                    text.strip(),
+                    committed_at,
+                    age_days,
+                )
             )
     return findings
 
