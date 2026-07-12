@@ -6,10 +6,12 @@ import io
 import json
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest import mock
 
+from debtmark import __version__
 from debtmark.cli import (
     DEFAULT_EXCLUDES,
     Finding,
@@ -295,7 +297,17 @@ class RenderAndCliTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as stopped:
             main(["--version"])
         self.assertEqual(stopped.exception.code, 0)
-        self.assertEqual(output.getvalue(), "debtmark 0.6.0\n")
+        self.assertEqual(output.getvalue(), "debtmark 0.7.0\n")
+
+    @unittest.skipIf(sys.version_info < (3, 11), "tomllib was added in Python 3.11")
+    def test_runtime_version_matches_project_metadata(self) -> None:
+        import tomllib
+
+        project = tomllib.loads(
+            (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(encoding="utf-8")
+        )
+
+        self.assertEqual(__version__, project["project"]["version"])
 
     def test_entrypoint_swallows_broken_pipe(self) -> None:
         with mock.patch("debtmark.cli.main", side_effect=BrokenPipeError):

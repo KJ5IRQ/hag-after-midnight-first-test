@@ -221,6 +221,24 @@ setting `PYTHONPATH` to both the target install and `src/`; the integration
 tests need the module importable for their `python -m debtmark` subprocess calls.
 
 Next session: start with `debtmark . --git-age --format summary` to verify the
-tool still works in the fresh environment, then decide whether the marker-regex
-work warrants a release or another round of dogfooding on external repos.
+ tool still works in the fresh environment, then decide whether the marker-regex
+ work warrants a release or another round of dogfooding on external repos.
+
+### Release closure — 0.7.0
+
+The marker-regex work now has its intended release boundary. Package metadata,
+the runtime declaration, and the dated changelog all identify 0.7.0. A focused
+unit test reads `pyproject.toml` through `tomllib` on Python 3.11+ and compares
+it with `debtmark.__version__`; it is skipped on Python 3.10 so that matrix stays
+dependency-free.
+
+Verification used a fresh build environment and produced
+`debtmark-0.7.0.tar.gz` and `debtmark-0.7.0-py3-none-any.whl`. Archive inspection
+confirmed source, package metadata, README, and license files, with no build or
+cache debris (24 sdist entries and 13 wheel entries). The wheel was installed in a
+fresh virtual environment outside the checkout; its module and installed console
+wrapper reported `debtmark 0.7.0`. All 44 unit and integration tests passed using
+that installed wheel. The exact tracked-file baseline ratchet exited 0 with no
+new findings, so the baseline was not changed. The release commit is local: the
+sandbox's HTTPS remote has no GitHub credentials, so the push was refused.
 
