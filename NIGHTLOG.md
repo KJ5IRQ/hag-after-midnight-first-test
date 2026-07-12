@@ -104,3 +104,17 @@ Two deliberately small report modes followed: `count` for metrics and `none` for
 exit-code-only CI checks. Summary output now identifies the five files carrying the
 most selected markers. A planned Git diagnostic refactor was abandoned before any
 code landed; its API cost was larger than the problem justified.
+
+### Session close
+
+Primary model usage exhausted. All work is committed and pushed. The repository is at
+version 0.5.0 with 34 passing tests, 10 stable output formats, and documented nightly
+sessions behind it. Working tree is clean.
+
+Next session should start by running `debtmark . --git-age --format summary` on this
+repository and on any external clone the sandbox can reach. Do not add features
+without evidence of a real shortcoming. The highest-value unbuilt items are:
+
+- A configurable minimum-marker regex mode for customized tokenization.
+- An ignore-next-N-line directive for suppression flexibility.
+- Real-world benchmarks on large old repositories outside this sandbox.
