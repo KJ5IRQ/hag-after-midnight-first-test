@@ -23,3 +23,7 @@ Verification: `python -m unittest discover -s tests -v` succeeds in the fresh wh
 
 - [x] Move the project license declaration to PEP 639 syntax, require the setuptools version that supports it, and release the metadata-only correction as 0.7.1.
 - [x] Build both artifacts without the deprecated-license warning; inspect wheel metadata for the SPDX expression and packaged license; install the wheel outside the checkout and run the full suite plus the baseline check. Record, commit, and push.
+
+## 4. Correct empty NDJSON output
+
+- [x] Make `--format ndjson` emit zero bytes when a scan has no findings rather than a blank non-JSON line. Add focused CLI coverage, release the behavior fix as 0.7.2, and verify a clean wheel install.

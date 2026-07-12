@@ -2,6 +2,12 @@
 
 All notable changes are recorded here. The project follows Semantic Versioning.
 
+## 0.7.2 — 2026-07-12
+
+### Fixed
+
+- Empty NDJSON scans no longer emit a blank line, which is not an NDJSON record.
+
 ## 0.7.1 — 2026-07-12
 
 ### Changed

@@ -272,7 +272,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
         )
     elif output_format == "ndjson":
-        print(render_ndjson(findings))
+        output = render_ndjson(findings)
+        if output:
+            print(output)
     elif output_format == "csv":
         print(render_csv(findings), end="")
     elif output_format == "markdown":

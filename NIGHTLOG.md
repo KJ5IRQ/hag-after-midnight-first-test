@@ -269,3 +269,14 @@ license deprecation warning. The wheel metadata contains `License-Expression: MI
 reported `debtmark 0.7.1`; all 44 tests and the tracked baseline ratchet passed.
 The release commit remains local because the HTTPS remote still has no credentials.
 
+### NDJSON empty-result correction — 0.7.2
+
+Reviewing the machine-readable output boundary found one real protocol defect:
+`--format ndjson` used `print` unconditionally, so an empty scan emitted one blank
+line. A blank line is not an NDJSON record. The CLI now writes nothing for no
+findings while retaining one JSON object per line when findings exist. Focused
+coverage asserts the zero-byte result. A fresh 0.7.2 wheel install printed the
+correct version and passed all 45 unit and integration tests; the baseline ratchet
+also exited 0. The patch commit remains local because the HTTPS remote still has no
+credentials.
+

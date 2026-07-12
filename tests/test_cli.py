@@ -297,7 +297,7 @@ class RenderAndCliTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as stopped:
             main(["--version"])
         self.assertEqual(stopped.exception.code, 0)
-        self.assertEqual(output.getvalue(), "debtmark 0.7.1\n")
+        self.assertEqual(output.getvalue(), "debtmark 0.7.2\n")
 
     @unittest.skipIf(sys.version_info < (3, 11), "tomllib was added in Python 3.11")
     def test_runtime_version_matches_project_metadata(self) -> None:
@@ -380,6 +380,15 @@ class RenderAndCliTests(unittest.TestCase):
         self.assertIn('café.py,3,TODO,"# TODO: a, b",,', csv_output)
         self.assertEqual(json.loads(ndjson_output)["path"], "café.py")
         self.assertIn("café.py", ndjson_output)
+
+    def test_empty_ndjson_output_has_no_blank_record(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            output = io.StringIO()
+            with redirect_stdout(output):
+                status = main([directory, "--format", "ndjson"])
+
+        self.assertEqual(status, 0)
+        self.assertEqual(output.getvalue(), "")
 
     def test_json_and_fail_exit(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
