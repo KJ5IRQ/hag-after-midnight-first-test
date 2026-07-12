@@ -143,8 +143,8 @@ def git_changed_files(root: Path, revision: str) -> list[Path] | None:
     return [root / os.fsdecode(name) for name in result.stdout.split(b"\0") if name]
 
 
-def _is_shallow_repository(root: Path) -> bool:
-    """Return whether Git lacks history needed for trustworthy line ages."""
+def _has_trustworthy_git_history(root: Path) -> bool:
+    """Return whether root is a non-shallow Git work tree suitable for blame ages."""
     try:
         result = subprocess.run(
             ["git", "rev-parse", "--is-shallow-repository"],
@@ -155,7 +155,7 @@ def _is_shallow_repository(root: Path) -> bool:
         )
     except (OSError, subprocess.TimeoutExpired):
         return False
-    return result.returncode == 0 and result.stdout.strip() == b"true"
+    return result.returncode == 0 and result.stdout.strip() == b"false"
 
 
 def _select_explicit_files(
@@ -241,7 +241,7 @@ def scan(
         )
     )
     current_time = now or datetime.now(timezone.utc)
-    shallow_repository = with_git_age and _is_shallow_repository(root)
+    git_age_available = with_git_age and _has_trustworthy_git_history(root)
     findings: list[Finding] = []
 
     candidates = (
@@ -280,7 +280,7 @@ def scan(
                 matches.append((number, text, match))
         timestamps = (
             _git_timestamps(root, relative)
-            if with_git_age and matches and not shallow_repository
+            if git_age_available and matches
             else {}
         )
         for number, text, match in matches:

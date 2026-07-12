@@ -51,3 +51,7 @@ Verification: `python -m unittest discover -s tests -v` succeeds in the fresh wh
 ## 10. Avoid misleading Git ages in shallow clones
 
 - [x] Detect shallow Git repositories before blaming lines and report their ages as unknown rather than attributing every boundary line to the shallow tip commit. Add a synthetic shallow-clone regression, document the limit, release 0.7.6, and verify an installed wheel.
+
+## 11. Avoid futile Git blame outside repositories
+
+- [x] Use the Git-history capability probe to skip per-file blame processes when age scanning a non-Git directory. Add a regression test and commit the performance correction.

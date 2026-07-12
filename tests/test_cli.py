@@ -198,6 +198,17 @@ class ScanTests(unittest.TestCase):
             self.assertEqual([finding.age_days for finding in findings], [None])
             self.assertIsNone(findings[0].committed_at)
 
+    def test_non_git_age_scan_does_not_blame_each_marked_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "a.py").write_text("# DEBT: one\n", encoding="utf-8")
+            (root / "b.py").write_text("# DEBT: two\n", encoding="utf-8")
+            with mock.patch("debtmark.core.subprocess.run", wraps=subprocess.run) as run:
+                findings = scan(root, markers=("DEBT",), with_git_age=True)
+
+            self.assertEqual([finding.age_days for finding in findings], [None, None])
+            self.assertEqual(len(run.call_args_list), 1)
+
     def test_git_file_selection_honors_ignores_and_tracked_mode(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
