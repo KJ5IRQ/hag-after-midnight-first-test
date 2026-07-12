@@ -334,3 +334,15 @@ The two intentional historical marker references in this note were added to the
 baseline. Stop adding release patches without evidence. This documentation commit
 remains local because the HTTPS remote still has no credentials.
 
+### Shallow-clone age correction — 0.7.6
+
+The Requests dogfood result did expose a correctness boundary after closer
+inspection. A synthetic two-commit repository shallow-cloned at depth one assigned
+a line from the first commit to the 2021 shallow-tip boundary; the scanner reported
+a false age of 365 days at a 2022 reference time. Debtmark now detects shallow Git
+repositories once per scan and leaves all Git ages unknown rather than fabricating
+that attribution. A regression test builds the shallow clone locally. The README
+states the limit. A fresh 0.7.6 wheel printed its version, passed all 46 tests, and
+passed the baseline ratchet. The release commit remains local because the HTTPS
+remote still has no credentials.
+

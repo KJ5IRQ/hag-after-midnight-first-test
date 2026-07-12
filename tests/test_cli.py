@@ -173,7 +173,30 @@ class ScanTests(unittest.TestCase):
 
             self.assertEqual([finding.age_days for finding in findings], [10, 10, None])
             self.assertEqual(findings[0].committed_at, "2020-01-01T00:00:00+00:00")
-            self.assertEqual(run.call_count, 1)
+            blame_calls = [call for call in run.call_args_list if call.args[0][:2] == ["git", "blame"]]
+            self.assertEqual(len(blame_calls), 1)
+
+    def test_shallow_clone_reports_unknown_git_age(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            upstream = Path(directory, "upstream")
+            clone = Path(directory, "clone")
+            subprocess.run(["git", "init", "-q", upstream], check=True)
+            subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=upstream, check=True)
+            subprocess.run(["git", "config", "user.name", "Test"], cwd=upstream, check=True)
+            (upstream / "work.py").write_text("# DEBT: inherited\n", encoding="utf-8")
+            subprocess.run(["git", "add", "work.py"], cwd=upstream, check=True)
+            old = {"GIT_AUTHOR_DATE": "2020-01-01T00:00:00+00:00", "GIT_COMMITTER_DATE": "2020-01-01T00:00:00+00:00"}
+            subprocess.run(["git", "commit", "-qm", "initial"], cwd=upstream, check=True, env={**__import__("os").environ, **old})
+            (upstream / "later.py").write_text("clean\n", encoding="utf-8")
+            subprocess.run(["git", "add", "later.py"], cwd=upstream, check=True)
+            recent = {"GIT_AUTHOR_DATE": "2021-01-01T00:00:00+00:00", "GIT_COMMITTER_DATE": "2021-01-01T00:00:00+00:00"}
+            subprocess.run(["git", "commit", "-qm", "later"], cwd=upstream, check=True, env={**__import__("os").environ, **recent})
+            subprocess.run(["git", "clone", "-q", "--depth", "1", upstream.as_uri(), clone], check=True)
+
+            findings = scan(clone, markers=("DEBT",), with_git_age=True, now=datetime(2022, 1, 1, tzinfo=timezone.utc))
+
+            self.assertEqual([finding.age_days for finding in findings], [None])
+            self.assertIsNone(findings[0].committed_at)
 
     def test_git_file_selection_honors_ignores_and_tracked_mode(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

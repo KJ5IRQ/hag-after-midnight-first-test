@@ -143,6 +143,21 @@ def git_changed_files(root: Path, revision: str) -> list[Path] | None:
     return [root / os.fsdecode(name) for name in result.stdout.split(b"\0") if name]
 
 
+def _is_shallow_repository(root: Path) -> bool:
+    """Return whether Git lacks history needed for trustworthy line ages."""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--is-shallow-repository"],
+            cwd=root,
+            capture_output=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return result.returncode == 0 and result.stdout.strip() == b"true"
+
+
 def _select_explicit_files(
     root: Path,
     files: Sequence[Path],
@@ -226,6 +241,7 @@ def scan(
         )
     )
     current_time = now or datetime.now(timezone.utc)
+    shallow_repository = with_git_age and _is_shallow_repository(root)
     findings: list[Finding] = []
 
     candidates = (
@@ -262,7 +278,11 @@ def scan(
                 if marker_regex is not None and not match.group(0):
                     raise ValueError("marker regex must not produce empty matches")
                 matches.append((number, text, match))
-        timestamps = _git_timestamps(root, relative) if with_git_age and matches else {}
+        timestamps = (
+            _git_timestamps(root, relative)
+            if with_git_age and matches and not shallow_repository
+            else {}
+        )
         for number, text, match in matches:
             committed_at = None
             age_days = None

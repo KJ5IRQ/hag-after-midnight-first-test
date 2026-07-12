@@ -2,6 +2,13 @@
 
 All notable changes are recorded here. The project follows Semantic Versioning.
 
+## 0.7.6 — 2026-07-12
+
+### Fixed
+
+- Git ages are now unknown in shallow clones instead of being misleadingly
+  attributed to the clone boundary commit.
+
 ## 0.7.5 — 2026-07-12
 
 ### Fixed

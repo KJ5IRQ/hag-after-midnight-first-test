@@ -47,3 +47,7 @@ Verification: `python -m unittest discover -s tests -v` succeeds in the fresh wh
 ## 9. External dogfood after release closure
 
 - [x] Scan a fresh shallow clone of Requests with tracked-file selection, Git age, and summary output. Record the observed result and only add product work if it exposes a concrete shortcoming.
+
+## 10. Avoid misleading Git ages in shallow clones
+
+- [x] Detect shallow Git repositories before blaming lines and report their ages as unknown rather than attributing every boundary line to the shallow tip commit. Add a synthetic shallow-clone regression, document the limit, release 0.7.6, and verify an installed wheel.

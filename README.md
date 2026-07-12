@@ -157,6 +157,8 @@ cannot be combined with an explicit `--files` option.
   is reported. Exclude such paths or capture them in a baseline when intentional.
 - A line containing several markers is reported once, under the first marker.
 - Git age uses the author timestamp from `git blame`; uncommitted lines have no age.
+- Git ages are unknown in shallow clones, whose boundary commits cannot identify the
+  line's original author.
 - `--min-age` excludes uncommitted markers because they have no meaningful age.
 - Exclusions match file or directory names, not globs.
 - Ignore-file patterns use case-sensitive shell globs.
