@@ -23,6 +23,8 @@ $ debtmark . --min-age 180 --sort age
 $ debtmark . --format json
 $ debtmark . --format ndjson
 $ debtmark . --format csv > debt.csv
+$ debtmark . --format count
+$ debtmark . --format none --fail-on-findings
 $ debtmark . --format markdown > debt-report.md
 $ debtmark . --git-age --format summary
 $ debtmark . --format sarif > debtmark.sarif
@@ -54,6 +56,9 @@ JSON wraps findings with the absolute scan root and count. NDJSON emits one find
 object per line for streaming pipelines. CSV has a stable header and column order.
 Markdown is suitable for reports, summary is for quick triage, SARIF targets code
 scanning systems, and GitHub format emits workflow annotations.
+Count prints only the number of selected findings. None prints nothing and is useful
+with `--fail-on-findings` when CI needs only an exit status. Summary also lists the
+five files with the highest concentration of selected markers.
 
 ## Adopt it without cleaning everything first
 

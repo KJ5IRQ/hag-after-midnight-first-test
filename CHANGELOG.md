@@ -2,6 +2,13 @@
 
 All notable changes are recorded here. The project follows Semantic Versioning.
 
+## Unreleased
+
+### Added
+
+- Count-only and silent report modes for shell and CI checks.
+- Top-five file concentration in summary reports.
+
 ## 0.5.0 — 2026-07-11
 
 ### Added

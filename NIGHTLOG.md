@@ -97,3 +97,10 @@ sets without an envelope. Both preserve Unicode source paths. Repository policy 
 now set age, sorting, and format defaults while explicit CLI arguments retain final
 authority. The installed entry point also treats a closed downstream pipe as normal
 termination instead of printing a traceback.
+
+### Small operational additions
+
+Two deliberately small report modes followed: `count` for metrics and `none` for
+exit-code-only CI checks. Summary output now identifies the five files carrying the
+most selected markers. A planned Git diagnostic refactor was abandoned before any
+code landed; its API cost was larger than the problem justified.
