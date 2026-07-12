@@ -13,6 +13,7 @@ from unittest import mock
 from debtmark.cli import (
     DEFAULT_EXCLUDES,
     Finding,
+    entrypoint,
     git_changed_files,
     git_files,
     main,
@@ -207,6 +208,10 @@ class RenderAndCliTests(unittest.TestCase):
             main(["--version"])
         self.assertEqual(stopped.exception.code, 0)
         self.assertEqual(output.getvalue(), "debtmark 0.4.0\n")
+
+    def test_entrypoint_swallows_broken_pipe(self) -> None:
+        with mock.patch("debtmark.cli.main", side_effect=BrokenPipeError):
+            self.assertEqual(entrypoint([]), 0)
 
     def test_markdown_escapes_table_pipes(self) -> None:
         output = render_markdown([Finding("a.py", 3, "TODO", "# TODO: a | b")], Path("/repo"))

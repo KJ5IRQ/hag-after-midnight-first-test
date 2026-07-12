@@ -238,5 +238,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     return 1 if findings and args.fail_on_findings else 0
 
 
+def entrypoint(argv: Sequence[str] | None = None) -> int:
+    """Run the CLI without a traceback when a downstream pipe closes early."""
+    try:
+        return main(argv)
+    except BrokenPipeError:
+        return 0
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(entrypoint())

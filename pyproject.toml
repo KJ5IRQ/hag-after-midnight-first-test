@@ -22,7 +22,7 @@ Repository = "https://github.com/KJ5IRQ/hag-after-midnight"
 Issues = "https://github.com/KJ5IRQ/hag-after-midnight/issues"
 
 [project.scripts]
-debtmark = "debtmark.cli:main"
+debtmark = "debtmark.cli:entrypoint"
 
 [tool.setuptools.packages.find]
 where = ["src"]
