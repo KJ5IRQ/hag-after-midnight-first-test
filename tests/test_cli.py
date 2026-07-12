@@ -440,6 +440,22 @@ class RenderAndCliTests(unittest.TestCase):
             counts = read_baseline(baseline)
             self.assertEqual(counts[("nested/policy.json", "TODO", "# TODO visible")], 1)
 
+    def test_default_baseline_is_not_scanned_without_baseline_option(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".debtmark-baseline.json").write_text(
+                '{"text": "TODO generated record"}\n', encoding="utf-8"
+            )
+            (root / "work.py").write_text("# FIXME visible\n", encoding="utf-8")
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                status = main([directory])
+
+            self.assertEqual(status, 0)
+            self.assertIn("work.py:1", output.getvalue())
+            self.assertNotIn(".debtmark-baseline.json", output.getvalue())
+
     def test_failed_baseline_replace_preserves_original_and_cleans_temp_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

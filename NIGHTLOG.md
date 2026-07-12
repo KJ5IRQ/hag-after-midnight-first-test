@@ -158,3 +158,11 @@ Ignore-file patterns ending in a slash were normalized, but identical patterns i
 JSON policy or passed to the library were not. That made the natural `generated/`
 spelling depend on how policy reached the scanner. Matching now normalizes every
 source at the common boundary and ignores an empty slash-only pattern.
+
+### Baseline self-noise
+
+The recommended plain summary scan reported 32 extra markers from the generated
+`.debtmark-baseline.json` itself. Applying a baseline hid them, but ordinary scans
+should not treat debtmark's own state as source debt. The conventional root baseline
+is now internally ignored whether or not `--baseline` is active; custom baseline
+paths retain their existing option-driven exclusion.

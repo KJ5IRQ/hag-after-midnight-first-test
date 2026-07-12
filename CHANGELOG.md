@@ -19,6 +19,8 @@ All notable changes are recorded here. The project follows Semantic Versioning.
   configuration order.
 - Ignore patterns supplied by configuration or the library now accept trailing
   slashes consistently with patterns read from ignore files.
+- The conventional root baseline is no longer reported as debt during ordinary
+  scans that do not pass `--baseline`.
 
 ## 0.5.0 — 2026-07-11
 

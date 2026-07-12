@@ -73,7 +73,9 @@ debtmark . --baseline .debtmark-baseline.json --fail-on-findings
 Baseline identities use path, marker, and comment text—not line number—so ordinary
 line movement does not create false positives. Duplicate comments are counted, so a
 third copy is still new. The baseline file itself is excluded when it sits below the
-scanned root.
+scanned root. The conventional root `.debtmark-baseline.json` is also excluded from
+ordinary scans when no baseline option is supplied, since its records contain marker
+text by design.
 
 ## Ignore generated or vendored paths
 
