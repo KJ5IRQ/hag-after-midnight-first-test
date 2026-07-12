@@ -106,7 +106,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--sort", choices=("path", "age", "marker"), default=None)
     parser.add_argument(
         "--format",
-        choices=("text", "json", "ndjson", "csv", "markdown", "summary", "sarif", "github"),
+        choices=(
+            "text", "count", "none", "json", "ndjson", "csv",
+            "markdown", "summary", "sarif", "github",
+        ),
         default=None,
     )
     parser.add_argument("--fail-on-findings", action="store_true", help="exit 1 when markers are found")
@@ -215,7 +218,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 2
 
     findings = select_findings(findings, min_age, sort_order)
-    if output_format == "json":
+    if output_format == "count":
+        print(len(findings))
+    elif output_format == "none":
+        pass
+    elif output_format == "json":
         print(
             json.dumps(
                 {"root": str(root), "count": len(findings), "findings": [asdict(f) for f in findings]},

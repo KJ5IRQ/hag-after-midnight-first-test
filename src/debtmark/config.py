@@ -48,7 +48,10 @@ def read_config(path: Path) -> Config:
     if sort is not None and sort not in {"path", "age", "marker"}:
         raise ValueError("config sort must be path, age, or marker")
     output_format = payload.get("format")
-    formats = {"text", "json", "ndjson", "csv", "markdown", "summary", "sarif", "github"}
+    formats = {
+        "text", "count", "none", "json", "ndjson", "csv",
+        "markdown", "summary", "sarif", "github",
+    }
     if output_format is not None and output_format not in formats:
         raise ValueError("config format is invalid")
     return Config(

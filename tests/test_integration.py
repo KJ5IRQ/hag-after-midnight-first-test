@@ -55,6 +55,20 @@ class InstalledCliTests(unittest.TestCase):
             self.assertIn("FIXME", result.stdout)
             self.assertEqual(result.stderr, "")
 
+    def test_count_and_silent_formats_support_shell_checks(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "work.py").write_text("# TODO one\n# FIXME two\n", encoding="utf-8")
+
+            count = self.run_debtmark(root, "--format", "count")
+            silent = self.run_debtmark(root, "--format", "none", "--fail-on-findings")
+
+            self.assertEqual(count.stdout, "2\n")
+            self.assertEqual(count.returncode, 0)
+            self.assertEqual(silent.stdout, "")
+            self.assertEqual(silent.stderr, "")
+            self.assertEqual(silent.returncode, 1)
+
     def test_blank_markers_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             result = self.run_debtmark(Path(directory), "--marker", "   ")
