@@ -21,6 +21,8 @@ $ debtmark src
 $ debtmark . --git-age
 $ debtmark . --min-age 180 --sort age
 $ debtmark . --format json
+$ debtmark . --format ndjson
+$ debtmark . --format csv > debt.csv
 $ debtmark . --format markdown > debt-report.md
 $ debtmark . --git-age --format summary
 $ debtmark . --format sarif > debtmark.sarif
@@ -47,6 +49,11 @@ src/http.py:9: HACK [12d]  # HACK: remove after the upstream release
 `--fail-on-findings` exits with status 1 if anything is found. Invalid paths exit
 with status 2. Without that flag, a
 successful scan exits with status 0 regardless of findings.
+
+JSON wraps findings with the absolute scan root and count. NDJSON emits one finding
+object per line for streaming pipelines. CSV has a stable header and column order.
+Markdown is suitable for reports, summary is for quick triage, SARIF targets code
+scanning systems, and GitHub format emits workflow annotations.
 
 ## Adopt it without cleaning everything first
 
@@ -107,11 +114,16 @@ configured values; command-line exclusions are added to configured exclusions.
   "markers": ["TODO", "FIXME", "DEPRECATED"],
   "exclude": ["fixtures"],
   "ignore": ["docs/examples/**"],
-  "files": "git"
+  "files": "git",
+  "min_age": 30,
+  "sort": "age",
+  "format": "summary"
 }
 ```
 
 Unknown fields and malformed values are errors rather than silently ignored policy.
+Explicit command-line marker, file, age, sort, and format options override configured
+defaults.
 
 For pull-request checks, `--changed REVISION` restricts scanning to files added,
 copied, modified, or renamed relative to that Git revision. Untracked files are not
