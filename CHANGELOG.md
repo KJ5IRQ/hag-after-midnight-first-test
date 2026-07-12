@@ -21,6 +21,8 @@ All notable changes are recorded here. The project follows Semantic Versioning.
   slashes consistently with patterns read from ignore files.
 - The conventional root baseline is no longer reported as debt during ordinary
   scans that do not pass `--baseline`.
+- Changed-file scans started below a repository root now use paths relative to the
+  requested scan root and do not silently omit in-scope changes.
 
 ## 0.5.0 — 2026-07-11
 

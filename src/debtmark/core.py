@@ -127,6 +127,7 @@ def git_changed_files(root: Path, revision: str) -> list[Path] | None:
     command = [
         "git",
         "diff",
+        "--relative",
         "--name-only",
         "-z",
         "--diff-filter=ACMR",

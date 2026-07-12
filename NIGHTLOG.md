@@ -166,3 +166,12 @@ The recommended plain summary scan reported 32 extra markers from the generated
 should not treat debtmark's own state as source debt. The conventional root baseline
 is now internally ignored whether or not `--baseline` is active; custom baseline
 paths retain their existing option-driven exclusion.
+
+### Nested changed-file scans
+
+A synthetic repository exposed a Git path-boundary bug: `git diff --name-only` emits
+repository-root-relative paths even when run below the root, while `git ls-files`
+does not. As a result, `debtmark app --changed HEAD` silently discarded changes under
+`app` and considered unrelated changes outside it. Changed-file discovery now asks
+Git for paths relative to the scan directory. A regression test changes files on
+both sides of that boundary.

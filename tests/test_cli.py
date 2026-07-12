@@ -195,6 +195,26 @@ class ScanTests(unittest.TestCase):
             self.assertIsNotNone(files)
             self.assertEqual([finding.path for finding in scan(root, files=files)], ["changed.py"])
 
+    def test_changed_file_selection_is_relative_to_nested_scan_root(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory)
+            root = repository / "app"
+            root.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repository, check=True)
+            subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=repository, check=True)
+            subprocess.run(["git", "config", "user.name", "Test"], cwd=repository, check=True)
+            (root / "inside.py").write_text("clean\n", encoding="utf-8")
+            (repository / "outside.py").write_text("clean\n", encoding="utf-8")
+            subprocess.run(["git", "add", "."], cwd=repository, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=repository, check=True)
+            (root / "inside.py").write_text("# TODO: inside\n", encoding="utf-8")
+            (repository / "outside.py").write_text("# FIXME: outside\n", encoding="utf-8")
+
+            files = git_changed_files(root, "HEAD")
+
+            self.assertEqual(files, [root / "inside.py"])
+            self.assertEqual([finding.path for finding in scan(root, files=files)], ["inside.py"])
+
     def test_ignore_patterns_match_paths_components_and_directories(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
