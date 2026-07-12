@@ -3,6 +3,18 @@
   "findings": [
     {
       "path": "NIGHTLOG.md",
+      "marker": "HACK",
+      "text": "2 HACK. The top concentration was `src/requests/auth.py` with three markers; every",
+      "count": 1
+    },
+    {
+      "path": "NIGHTLOG.md",
+      "marker": "TODO",
+      "text": "and summary output. Debtmark found 17 markers across 11 files: 9 TODO, 6 XXX, and",
+      "count": 1
+    },
+    {
+      "path": "NIGHTLOG.md",
       "marker": "TODO",
       "text": "framework: `debtmark`, a zero-dependency scanner for TODO-like promises in source",
       "count": 1

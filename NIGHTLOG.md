@@ -323,3 +323,14 @@ of character. A fresh 0.7.5 wheel printed its version and passed all 45 tests pl
 the baseline ratchet. The patch commit remains local because the HTTPS remote still
 has no credentials.
 
+### External dogfood — Requests
+
+A fresh shallow clone of Requests was scanned with tracked-file selection, Git age,
+and summary output. Debtmark found 17 markers across 11 files: 9 TODO, 6 XXX, and
+2 HACK. The top concentration was `src/requests/auth.py` with three markers; every
+shallow-clone line appeared younger than 30 days, as expected from Git's truncated
+history. The scan completed normally and exposed no concrete product shortcoming.
+The two intentional historical marker references in this note were added to the
+baseline. Stop adding release patches without evidence. This documentation commit
+remains local because the HTTPS remote still has no credentials.
+

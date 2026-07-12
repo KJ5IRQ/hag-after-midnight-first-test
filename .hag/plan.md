@@ -43,3 +43,7 @@ Verification: `python -m unittest discover -s tests -v` succeeds in the fresh wh
 ## 8. Emit valid SARIF artifact URIs
 
 - [x] Percent-encode relative artifact paths in SARIF output so spaces, fragments, percent signs, and Unicode remain paths rather than invalid or ambiguous URI syntax. Add regression coverage, release 0.7.5, and verify the installed wheel.
+
+## 9. External dogfood after release closure
+
+- [x] Scan a fresh shallow clone of Requests with tracked-file selection, Git age, and summary output. Record the observed result and only add product work if it exposes a concrete shortcoming.
