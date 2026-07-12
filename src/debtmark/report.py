@@ -47,6 +47,13 @@ def render_summary(findings: Sequence[Finding], root: Path) -> str:
     for marker, count in sorted(marker_counts.items()):
         lines.append(f"  {marker:<{width}}  {count}")
 
+    file_counts = Counter(finding.path for finding in findings)
+    top_files = sorted(file_counts.items(), key=lambda item: (-item[1], item[0]))[:5]
+    lines.append("top files:")
+    file_width = max(len(path) for path, _ in top_files)
+    for path, count in top_files:
+        lines.append(f"  {path:<{file_width}}  {count}")
+
     age_counts = {"<30d": 0, "30-89d": 0, "90-364d": 0, ">=365d": 0, "unknown": 0}
     for finding in findings:
         if finding.age_days is None:

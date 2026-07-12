@@ -230,6 +230,8 @@ class RenderAndCliTests(unittest.TestCase):
         self.assertIn("4 marker(s) across 3 file(s)", output)
         self.assertIn("FIXME  1", output)
         self.assertIn("TODO   2", output)
+        self.assertIn("top files:", output)
+        self.assertIn("a.py  2", output)
         self.assertIn("<30d     1", output)
         self.assertIn(">=365d   1", output)
         self.assertIn("unknown  1", output)
