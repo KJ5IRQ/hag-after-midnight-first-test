@@ -153,5 +153,15 @@ cannot be combined with an explicit `--files` option.
 ## Development
 
 ```console
+python -m pip install -e .
 python -m unittest discover -s tests -v
+debtmark . --files tracked --baseline .debtmark-baseline.json --fail-on-findings
+```
+
+The committed baseline records intentional marker examples in the implementation,
+tests, and documentation. CI rejects additions beyond it. Refresh the baseline only
+when a newly added match is deliberate:
+
+```console
+debtmark . --files tracked --write-baseline .debtmark-baseline.json
 ```

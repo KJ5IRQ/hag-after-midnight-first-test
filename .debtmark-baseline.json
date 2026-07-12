@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "findings": [
+    {
+      "path": "NIGHTLOG.md",
+      "marker": "TODO",
+      "text": "framework: `debtmark`, a zero-dependency scanner for TODO-like promises in source",
+      "count": 1
+    },
+    {
+      "path": "NIGHTLOG.md",
+      "marker": "XXX",
+      "text": "The first external dogfood run succeeded against Click: three `XXX` matches across",
+      "count": 1
+    },
+    {
+      "path": "pyproject.toml",
+      "marker": "TODO",
+      "text": "keywords = [\"technical-debt\", \"todo\", \"static-analysis\", \"cli\"]",
+      "count": 1
+    },
+    {
+      "path": "src/debtmark/cli.py",
+      "marker": "TODO",
+      "text": "prog=\"debtmark\", description=\"Find TODO, FIXME, HACK, and XXX markers in a repository.\"",
+      "count": 1
+    },
+    {
+      "path": "src/debtmark/core.py",
+      "marker": "TODO",
+      "text": "DEFAULT_MARKERS = (\"TODO\", \"FIXME\", \"HACK\", \"XXX\")",
+      "count": 1
+    },
+    {
+      "path": "tests/test_integration.py",
+      "marker": "FIXME",
+      "text": "(root / \"work.py\").write_text(\"# FIXME: broken\\n\", encoding=\"utf-8\")",
+      "count": 1
+    },
+    {
+      "path": "tests/test_integration.py",
+      "marker": "FIXME",
+      "text": "self.assertIn(\"FIXME\", result.stdout)",
+      "count": 1
+    },
+    {
+      "path": "tests/test_integration.py",
+      "marker": "TODO",
+      "text": "(root / \"work.py\").write_text(\"# TODO ignored\\n# DEBT visible\\n\", encoding=\"utf-8\")",
+      "count": 1
+    },
+    {
+      "path": "tests/test_integration.py",
+      "marker": "TODO",
+      "text": "(root / \"work.py\").write_text(\"# TODO one\\n# FIXME two\\n\", encoding=\"utf-8\")",
+      "count": 1
+    },
+    {
+      "path": "tests/test_integration.py",
+      "marker": "TODO",
+      "text": "(root / \"work.py\").write_text(\"# TODO: remove compatibility shim\\n\", encoding=\"utf-8\")",
+      "count": 1
+    },
+    {
+      "path": "tests/test_integration.py",
+      "marker": "TODO",
+      "text": "config.write_text('{\"markres\": [\"TODO\"]}', encoding=\"utf-8\")",
+      "count": 1
+    },
+    {
+      "path": "tests/test_integration.py",
+      "marker": "TODO",
+      "text": "self.assertEqual(json.loads(ndjson.stdout)[\"marker\"], \"TODO\")",
+      "count": 1
+    },
+    {
+      "path": "tests/test_integration.py",
+      "marker": "TODO",
+      "text": "self.assertEqual(json.loads(sarif.stdout)[\"runs\"][0][\"results\"][0][\"ruleId\"], \"TODO\")",
+      "count": 1
+    },
+    {
+      "path": "tests/test_integration.py",
+      "marker": "TODO",
+      "text": "self.assertIn(\"::warning file=work.py,line=1,title=debtmark TODO::\", github.stdout)",
+      "count": 1
+    },
+    {
+      "path": "tests/test_integration.py",
+      "marker": "TODO",
+      "text": "self.assertIn(\"work.py:1: TODO\", text.stdout)",
+      "count": 1
+    },
+    {
+      "path": "tests/test_integration.py",
+      "marker": "TODO",
+      "text": "self.assertIn(\"| `work.py:1` | TODO |\", markdown.stdout)",
+      "count": 1
+    }
+  ]
+}

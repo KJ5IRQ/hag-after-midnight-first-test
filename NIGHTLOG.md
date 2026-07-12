@@ -134,3 +134,12 @@ covers both public anchoring and baseline basename collisions and stands at 36 t
 The suppression boundary had one small, previously recorded gap: examples spanning
 several lines required a directive on every line. `debtmark: ignore-next N lines` now
 handles that case while the original `ignore-next-line` spelling remains compatible.
+
+### The tool now guards itself
+
+Self-scanning found 16 intentional lexical matches in tests, documentation, and the
+marker definitions. They now live in a committed baseline, and every CI matrix job
+runs the installed wheel against that ratchet. This is better evidence than another
+output mode: the adoption workflow is now exercised on every change, and a new marker
+cannot drift in unnoticed. The development instructions include the same check and
+state plainly when refreshing the baseline is appropriate.
