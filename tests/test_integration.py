@@ -78,6 +78,8 @@ class InstalledCliTests(unittest.TestCase):
                         "markers": ["DEBT"],
                         "exclude": ["vendor"],
                         "ignore": ["docs/*.txt"],
+                        "sort": "marker",
+                        "format": "ndjson",
                     }
                 ),
                 encoding="utf-8",
@@ -89,10 +91,12 @@ class InstalledCliTests(unittest.TestCase):
             (root / "work.py").write_text("# TODO ignored\n# DEBT visible\n", encoding="utf-8")
 
             result = self.run_debtmark(root)
+            overridden = self.run_debtmark(root, "--format", "text")
 
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("work.py:2: DEBT", result.stdout)
+            self.assertEqual(json.loads(result.stdout)["marker"], "DEBT")
             self.assertNotIn("hidden", result.stdout)
+            self.assertIn("work.py:2: DEBT", overridden.stdout)
 
     def test_unknown_config_fields_fail_loudly(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -104,6 +108,18 @@ class InstalledCliTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 2)
             self.assertIn("unknown config field: markres", result.stderr)
+
+    def test_invalid_configured_age_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".debtmark-config.json").write_text(
+                '{"min_age": true}', encoding="utf-8"
+            )
+
+            result = self.run_debtmark(root)
+
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("min_age must be a non-negative integer", result.stderr)
 
 
 if __name__ == "__main__":

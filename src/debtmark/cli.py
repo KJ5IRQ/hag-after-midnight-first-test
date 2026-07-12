@@ -102,11 +102,11 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="DAYS",
         help="only show committed markers at least DAYS old",
     )
-    parser.add_argument("--sort", choices=("path", "age", "marker"), default="path")
+    parser.add_argument("--sort", choices=("path", "age", "marker"), default=None)
     parser.add_argument(
         "--format",
         choices=("text", "json", "ndjson", "csv", "markdown", "summary", "sarif", "github"),
-        default="text",
+        default=None,
     )
     parser.add_argument("--fail-on-findings", action="store_true", help="exit 1 when markers are found")
     baseline = parser.add_mutually_exclusive_group()
@@ -170,7 +170,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     if ignore_patterns is None:
         return 2
     ignore_patterns = (*ignore_patterns, *config.ignore)
-    needs_git_age = args.git_age or args.min_age is not None or args.sort == "age"
+    min_age = args.min_age if args.min_age is not None else config.min_age
+    sort_order = args.sort or config.sort or "path"
+    output_format = args.format or config.format or "text"
+    needs_git_age = args.git_age or min_age is not None or sort_order == "age"
     files = None
     file_mode = args.files or config.files or "all"
     if args.changed and args.files:
@@ -210,25 +213,25 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"debtmark: invalid baseline {args.baseline}: {error}", file=sys.stderr)
             return 2
 
-    findings = select_findings(findings, args.min_age, args.sort)
-    if args.format == "json":
+    findings = select_findings(findings, min_age, sort_order)
+    if output_format == "json":
         print(
             json.dumps(
                 {"root": str(root), "count": len(findings), "findings": [asdict(f) for f in findings]},
                 indent=2,
             )
         )
-    elif args.format == "ndjson":
+    elif output_format == "ndjson":
         print(render_ndjson(findings))
-    elif args.format == "csv":
+    elif output_format == "csv":
         print(render_csv(findings), end="")
-    elif args.format == "markdown":
+    elif output_format == "markdown":
         print(render_markdown(findings, root), end="")
-    elif args.format == "summary":
+    elif output_format == "summary":
         print(render_summary(findings, root))
-    elif args.format == "sarif":
+    elif output_format == "sarif":
         print(render_sarif(findings))
-    elif args.format == "github":
+    elif output_format == "github":
         print(render_github(findings))
     else:
         print(render_text(findings, root))
