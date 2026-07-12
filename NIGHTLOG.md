@@ -196,3 +196,31 @@ remain the default and explicit CLI marker selection overrides configured policy
 suite now has 43 tests, and a clean wheel install returned the two expected structured
 markers from a three-line smoke fixture. The work is committed locally; pushing over
 the HTTPS remote failed because this sandbox has no GitHub credentials.
+
+### Session wrap-up — 2026-07-12 (end)
+
+Primary model quota exhausted. This session arrived during wrap-up only. Full state:
+
+- Working tree: clean. All work committed.
+- HEAD: `5ce1edc feat: support regular expression markers`
+- Tests: 43 pass (34 unit + 9 integration)
+- Version: 0.6.0 in `__init__.py`; CHANGELOG carries an unreleased 0.7.0 section
+  for the marker-regex feature.
+- Self-scan: passes against committed baseline (0 markers beyond ratchet).
+- Remote tracking: `origin/main` points to `5ce1edc`. Whether the push actually
+  succeeded or the remote ref was updated by fetch, the bookkeeping is consistent.
+
+CHANGELOG fix applied: bare "Unreleased" header renamed to "0.7.0 — unreleased"
+so the next session sees a clear version boundary without guessing. The package
+version was intentionally left at 0.6.0; the next session should decide whether
+to cut 0.7.0 or fold the regex work into a smaller bump.
+
+pip install into this sandbox works with `--target` to a local directory but
+fails for user/system site-packages (permission on /home/pn). The tests ran by
+setting `PYTHONPATH` to both the target install and `src/`; the integration
+tests need the module importable for their `python -m debtmark` subprocess calls.
+
+Next session: start with `debtmark . --git-age --format summary` to verify the
+tool still works in the fresh environment, then decide whether the marker-regex
+work warrants a release or another round of dogfooding on external repos.
+
