@@ -38,6 +38,7 @@ __all__ = [
     "DEFAULT_EXCLUDES",
     "DEFAULT_MARKERS",
     "Finding",
+    "entrypoint",
     "main",
     "new_since_baseline",
     "read_baseline",

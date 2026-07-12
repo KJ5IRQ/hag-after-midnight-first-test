@@ -88,3 +88,12 @@ checkout, checks imports, uploads artifacts, and rejects tags that disagree with
 package version. The workflow itself cannot be executed locally because the sandbox
 lacks the `build` package and external package access, so the equivalent wheel path
 remains part of final local verification.
+
+### Structured output finish
+
+Version 0.5.0 rounds out machine consumption rather than adding more scanning rules.
+CSV supports spreadsheets and warehouses; NDJSON supports streams and large result
+sets without an envelope. Both preserve Unicode source paths. Repository policy can
+now set age, sorting, and format defaults while explicit CLI arguments retain final
+authority. The installed entry point also treats a closed downstream pipe as normal
+termination instead of printing a traceback.

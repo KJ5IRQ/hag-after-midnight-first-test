@@ -2,6 +2,19 @@
 
 All notable changes are recorded here. The project follows Semantic Versioning.
 
+## 0.5.0 — 2026-07-11
+
+### Added
+
+- CSV output with stable columns and newline-delimited JSON output.
+- Repository policy defaults for minimum age, sorting, and report format.
+
+### Changed
+
+- Explicit CLI triage and report options override repository policy defaults.
+- Console entry points handle closed downstream pipes without a traceback.
+- Structured formats preserve Unicode paths and text.
+
 ## 0.4.0 — 2026-07-11
 
 ### Added

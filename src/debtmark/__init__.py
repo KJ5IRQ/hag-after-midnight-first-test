@@ -1,3 +1,3 @@
 """Repository debt marker scanner."""
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
