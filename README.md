@@ -144,9 +144,11 @@ becomes the marker reported in output. Policy files can set the same mode with
 invalid or match empty text are rejected.
 
 For pull-request checks, `--changed REVISION` restricts scanning to files added,
-copied, modified, or renamed relative to that Git revision. Untracked files are not
-part of a revision diff. An explicit `--changed` overrides configured file mode and
-cannot be combined with an explicit `--files` option.
+copied, modified, or renamed relative to that Git revision. `REVISION` is resolved
+as one Git revision before diffing, so option-like values such as `--cached` are
+rejected rather than changing Git's diff mode. Untracked files are not part of a
+revision diff. An explicit `--changed` overrides configured file mode and cannot be
+combined with an explicit `--files` option.
 
 ## Design limits
 
