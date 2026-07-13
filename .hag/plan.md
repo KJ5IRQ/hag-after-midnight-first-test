@@ -1,57 +1,23 @@
-# Night build plan — 2026-07-12
+# Night build plan
 
-The repository is clean at `aaf926a`; 0.6.0 is released and the custom marker-regex work is already committed and documented under an unreleased 0.7.0 heading. The useful work tonight is to close that release cleanly, not invent another feature. The source-backed unit suite passes; integration tests require an installed package by design, as CI already provides.
+Debtmark is released at 0.7.7 and its 47-test suite is healthy when exercised through the installed-package path used by CI. The previous project request has been fulfilled, but this checkout is still the debtmark repository. Do not invent another report format or broaden the scanner. There is one reproduced correctness flaw worth closing: `--changed` passes its purported revision to `git diff` as an option-capable argument. For example, `debtmark PATH --changed=--cached` currently succeeds instead of rejecting an unresolved revision, and silently changes Git's diff semantics.
 
-## 1. Cut and verify debtmark 0.7.0
+## 1. Treat `--changed` revisions strictly as revisions
 
-- [x] Update `pyproject.toml` and `src/debtmark/__init__.py` from 0.6.0 to 0.7.0, and date the existing 0.7.0 section in `CHANGELOG.md`. Do not change marker-regex behavior during the release commit.
-- [x] Add a focused version-consistency test in `tests/test_cli.py` that compares `debtmark.__version__` with the project version read from `pyproject.toml` using `tomllib`. This prevents the two currently duplicated version declarations from drifting on later releases; use `tomli` only on Python 3.10 in the test/CI path if necessary, or structure the test so the existing 3.10 matrix remains dependency-light.
-- [x] Build both wheel and sdist from a clean tree. Install the wheel into a fresh temporary virtual environment outside the checkout, then verify `debtmark --version` reports 0.7.0 and run the full unit/integration suite with that installed package visible. Inspect the archives to ensure they contain source, package metadata, README, and license but no build/cache debris.
-- [x] Run the self-ratchet exactly as CI does: `debtmark . --files tracked --baseline .debtmark-baseline.json --format none --fail-on-findings`. Refresh `.debtmark-baseline.json` only if the version-consistency test introduces an intentional marker match; do not conceal unrelated findings.
-- [x] Record the release verification (test count, artifact names, clean-install probe, and self-scan result) in `NIGHTLOG.md`. Commit the release as one coherent commit. Do not create or push a tag: artifact verification is available in the sandbox, but publishing is an operator action.
+- [ ] In `src/debtmark/core.py`, harden `git_changed_files()` so an option-like value can never be interpreted as a `git diff` flag. Prefer Git's end-of-options boundary if it works across the supported Git command shape; otherwise resolve the user value first with a separate option-safe `git rev-parse --verify` call and pass only the resulting object ID to `git diff`. Preserve the existing behavior for branches, tags, commit IDs, nested scan roots, staged changes, unstaged changes, renames, and NUL-delimited unusual paths.
+- [ ] Add focused regressions in `tests/test_cli.py`: a normal `HEAD` revision must still select changed files; an option-like value such as `--cached` must return `None` from `git_changed_files()` rather than alter diff mode; and the CLI must turn that failure into exit status 2 with the existing `cannot resolve changed files` diagnostic. Keep the test repository local and deterministic.
+- [ ] Run the complete suite through an installed package, not merely `PYTHONPATH`: install the checkout into a fresh temporary virtual environment outside `/workspace`, then run `python -m unittest discover -s tests -v`. Also run the exact self-ratchet command from `.github/workflows/test.yml` and confirm it exits 0 without refreshing `.debtmark-baseline.json` unless the new test contains an intentional marker literal.
 
-Expected outcome: source metadata, runtime `--version`, changelog, and built distributions all identify 0.7.0; the regex feature has a finished release boundary and future version drift is caught automatically.
+Expected outcome: `--changed` accepts only a revision operand; Git options cannot masquerade as revisions, while ordinary and nested-root changed-file scans behave exactly as before.
 
-Verification: `python -m unittest discover -s tests -v` succeeds in the fresh wheel environment; both distributions build; the installed CLI prints `debtmark 0.7.0`; archive inspection is clean; the baseline self-check exits 0; and `git status --short` is empty after the release commit.
+Verification: the new library and CLI regressions pass; all existing tests pass from the fresh install; `debtmark TMP --changed=--cached` exits 2 in a synthetic repository; `debtmark TMP --changed HEAD` still reports the expected changed file; and the baseline ratchet exits 0.
 
-## 2. Exercise the distribution in release CI
+## 2. Release the correction as 0.7.8
 
-- [x] Extend `.github/workflows/release.yml` so its fresh wheel environment runs the complete unit and integration suite, not merely an import smoke test. Keep the test interpreter outside the checkout and leave artifact publication unchanged.
-- [x] Validate the workflow YAML and reproduce the installed-wheel test command locally. Record the result in `NIGHTLOG.md`, commit, and push.
+- [ ] Update `pyproject.toml`, `src/debtmark/__init__.py`, and `CHANGELOG.md` to 0.7.8 with a concise security/correctness-facing note that option-like changed revisions are rejected rather than interpreted by Git. Do not bundle unrelated behavior.
+- [ ] Build wheel and sdist, install the wheel into a second clean external virtual environment, verify both `debtmark --version` and the full suite against that wheel, and inspect the archives for the expected source, metadata, README, and license without cache/build debris.
+- [ ] Record the reproduction, fix strategy, test count, artifact names, clean-install probe, and ratchet result in `NIGHTLOG.md`. Commit the release. Do not tag or publish; those remain operator actions.
 
-## 3. Remove the package-build deprecation warning
+Expected outcome: the repository has a narrow, verified 0.7.8 patch release and then returns to maintenance mode rather than accumulating speculative features.
 
-- [x] Move the project license declaration to PEP 639 syntax, require the setuptools version that supports it, and release the metadata-only correction as 0.7.1.
-- [x] Build both artifacts without the deprecated-license warning; inspect wheel metadata for the SPDX expression and packaged license; install the wheel outside the checkout and run the full suite plus the baseline check. Record, commit, and push.
-
-## 4. Correct empty NDJSON output
-
-- [x] Make `--format ndjson` emit zero bytes when a scan has no findings rather than a blank non-JSON line. Add focused CLI coverage, release the behavior fix as 0.7.2, and verify a clean wheel install.
-
-## 5. Preserve Markdown table structure for arbitrary markers and paths
-
-- [x] Escape table separators in Markdown location and marker cells, not only finding text. Add regression coverage, release 0.7.3, and verify the installed artifact.
-
-## 6. Keep version tests single-sourced
-
-- [x] Remove the hard-coded CLI version expectation from the test while retaining the separate runtime-to-project metadata consistency assertion. Validate against the installed wheel, record, commit, and push without another release bump.
-
-## 7. Render Markdown table values faithfully
-
-- [x] Replace Markdown backslash escaping with HTML escaping plus pipe entities so paths and custom markers containing pipes display without a spurious backslash while retaining table structure. Cover the rendered source, release 0.7.4, and verify an installed wheel.
-
-## 8. Emit valid SARIF artifact URIs
-
-- [x] Percent-encode relative artifact paths in SARIF output so spaces, fragments, percent signs, and Unicode remain paths rather than invalid or ambiguous URI syntax. Add regression coverage, release 0.7.5, and verify the installed wheel.
-
-## 9. External dogfood after release closure
-
-- [x] Scan a fresh shallow clone of Requests with tracked-file selection, Git age, and summary output. Record the observed result and only add product work if it exposes a concrete shortcoming.
-
-## 10. Avoid misleading Git ages in shallow clones
-
-- [x] Detect shallow Git repositories before blaming lines and report their ages as unknown rather than attributing every boundary line to the shallow tip commit. Add a synthetic shallow-clone regression, document the limit, release 0.7.6, and verify an installed wheel.
-
-## 11. Avoid futile Git blame outside repositories
-
-- [x] Use the Git-history capability probe to skip per-file blame processes when age scanning a non-Git directory. Add a regression test and commit the performance correction.
+Verification: source metadata, runtime version, changelog, wheel, and sdist all identify 0.7.8; the installed-wheel suite and self-ratchet pass; `git diff --check` is clean; and `git status --short` is empty after the release commit.
