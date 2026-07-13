@@ -246,6 +246,22 @@ class ScanTests(unittest.TestCase):
             self.assertIsNotNone(files)
             self.assertEqual([finding.path for finding in scan(root, files=files)], ["changed.py"])
 
+    def test_changed_file_selection_accepts_annotated_tag(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
+            (root / "changed.py").write_text("base\n", encoding="utf-8")
+            subprocess.run(["git", "add", "changed.py"], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            subprocess.run(["git", "tag", "-a", "v1", "-m", "version one"], cwd=root, check=True)
+            (root / "changed.py").write_text("changed\n", encoding="utf-8")
+
+            files = git_changed_files(root, "v1")
+
+            self.assertEqual(files, [root / "changed.py"])
+
     def test_changed_file_selection_rejects_option_like_revision(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
