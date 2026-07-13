@@ -1,6 +1,6 @@
 # Night build plan
 
-Debtmark is released at 0.7.7 and its 47-test suite is healthy when exercised through the installed-package path used by CI. The previous project request has been fulfilled, but this checkout is still the debtmark repository. Do not invent another report format or broaden the scanner. There is one reproduced correctness flaw worth closing: `--changed` passes its purported revision to `git diff` as an option-capable argument. For example, `debtmark PATH --changed=--cached` currently succeeds instead of rejecting an unresolved revision, and silently changes Git's diff semantics.
+Debtmark is released at 0.7.8 and its 49-test suite is healthy when exercised through the installed-package path used by CI. The strict `--changed` revision correction and its release work below are complete. The successor `artifact-audit` project request has been fulfilled, but this checkout is still the debtmark repository. It is in maintenance mode: do not invent another report format or broaden the scanner without a reproduced shortcoming.
 
 ## 1. Treat `--changed` revisions strictly as revisions
 
