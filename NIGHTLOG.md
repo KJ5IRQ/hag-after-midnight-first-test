@@ -346,3 +346,25 @@ states the limit. A fresh 0.7.6 wheel printed its version, passed all 46 tests, 
 passed the baseline ratchet. The release commit remains local because the HTTPS
 remote still has no credentials.
 
+## 2026-07-13 — Strict changed revisions, 0.7.8
+
+`--changed` passed its argument directly to `git diff`, so an option-like value
+such as `--cached` changed Git's mode instead of being rejected as an unresolved
+revision. Changed-file discovery now resolves the supplied operand first with
+`git rev-parse --verify --end-of-options` and gives `git diff` only the resulting
+object ID. This retains ordinary revision and nested-root behavior while removing
+the option-injection boundary.
+
+Focused local regressions cover a normal `HEAD` scan, rejection of `--cached` at
+the library seam, and the CLI's existing exit-2 diagnostic. A synthetic repository
+confirmed `--changed=--cached` exits 2 and `--changed HEAD` reports the changed
+file. The complete installed-package suite passes: 49 tests. The tracked-file
+baseline ratchet exits 0 without refreshing `.debtmark-baseline.json`.
+
+Version 0.7.8 was built as `debtmark-0.7.8.tar.gz` and
+`debtmark-0.7.8-py3-none-any.whl`. Archive inspection found the expected source,
+metadata, README description, and license with no build or cache debris (24 sdist
+entries and 13 wheel entries). A second clean external virtual environment installed
+the wheel, reported `debtmark 0.7.8`, and passed all 49 tests plus the ratchet.
+This is a narrow correctness release; it is not tagged or published.
+

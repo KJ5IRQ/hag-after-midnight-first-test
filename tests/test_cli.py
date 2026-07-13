@@ -246,6 +246,28 @@ class ScanTests(unittest.TestCase):
             self.assertIsNotNone(files)
             self.assertEqual([finding.path for finding in scan(root, files=files)], ["changed.py"])
 
+    def test_changed_file_selection_rejects_option_like_revision(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            (root / "work.py").write_text("clean\n", encoding="utf-8")
+            subprocess.run(["git", "add", "work.py"], cwd=root, check=True)
+
+            self.assertIsNone(git_changed_files(root, "--cached"))
+
+    def test_cli_rejects_option_like_changed_revision(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            (root / "work.py").write_text("clean\n", encoding="utf-8")
+            error = io.StringIO()
+
+            with redirect_stderr(error):
+                status = main([directory, "--changed=--cached"])
+
+            self.assertEqual(status, 2)
+            self.assertIn("cannot resolve changed files", error.getvalue())
+
     def test_changed_file_selection_is_relative_to_nested_scan_root(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repository = Path(directory)

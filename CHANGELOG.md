@@ -2,6 +2,13 @@
 
 All notable changes are recorded here. The project follows Semantic Versioning.
 
+## 0.7.8 — 2026-07-13
+
+### Fixed
+
+- Changed-file revisions that resemble Git options are rejected rather than being
+  interpreted as `git diff` flags.
+
 ## 0.7.7 — 2026-07-12
 
 ### Fixed

@@ -124,6 +124,21 @@ def git_files(root: Path, tracked_only: bool = False) -> list[Path] | None:
 
 def git_changed_files(root: Path, revision: str) -> list[Path] | None:
     """Return files added, copied, modified, or renamed since a Git revision."""
+    try:
+        resolved = subprocess.run(
+            ["git", "rev-parse", "--verify", "--end-of-options", revision],
+            cwd=root,
+            capture_output=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if resolved.returncode != 0:
+        return None
+    object_id = resolved.stdout.strip()
+    if not object_id:
+        return None
     command = [
         "git",
         "diff",
@@ -131,7 +146,7 @@ def git_changed_files(root: Path, revision: str) -> list[Path] | None:
         "--name-only",
         "-z",
         "--diff-filter=ACMR",
-        revision,
+        os.fsdecode(object_id),
         "--",
     ]
     try:
