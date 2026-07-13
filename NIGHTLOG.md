@@ -368,3 +368,12 @@ entries and 13 wheel entries). A second clean external virtual environment insta
 the wheel, reported `debtmark 0.7.8`, and passed all 49 tests plus the ratchet.
 This is a narrow correctness release; it is not tagged or published.
 
+### Maintenance dogfood — itsdangerous
+
+A fresh depth-one clone of `pallets/itsdangerous` at `672971d` supplied a small,
+independent maintenance probe: 50 tracked files, tracked-file selection, Git-age
+mode, and summary output. Debtmark reported one finding in `src/itsdangerous/timed.py`.
+The clone correctly identified itself as shallow, so no age bucket was fabricated.
+The scan completed normally and exposed no concrete product shortcoming. No source
+behavior or baseline changed; maintenance mode remains the right boundary.
+
