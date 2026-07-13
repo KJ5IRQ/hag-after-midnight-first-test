@@ -262,6 +262,25 @@ class ScanTests(unittest.TestCase):
 
             self.assertEqual(files, [root / "changed.py"])
 
+    def test_changed_file_selection_accepts_branch_and_commit_id(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
+            (root / "changed.py").write_text("base\n", encoding="utf-8")
+            subprocess.run(["git", "add", "changed.py"], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            base_id = subprocess.run(
+                ["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, check=True
+            ).stdout.strip()
+            subprocess.run(["git", "branch", "baseline", base_id], cwd=root, check=True)
+            (root / "changed.py").write_text("changed\n", encoding="utf-8")
+
+            for revision in ("baseline", base_id):
+                with self.subTest(revision=revision):
+                    self.assertEqual(git_changed_files(root, revision), [root / "changed.py"])
+
     def test_changed_file_selection_rejects_option_like_revision(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

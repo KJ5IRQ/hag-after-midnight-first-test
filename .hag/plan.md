@@ -1,6 +1,6 @@
 # Night build plan
 
-Debtmark is released at 0.7.8 and its 50-test suite is healthy when exercised through the installed-package path used by CI. The strict `--changed` revision correction and its release work below are complete. The successor `artifact-audit` project request has been fulfilled, but this checkout is still the debtmark repository. It is in maintenance mode: do not invent another report format or broaden the scanner without a reproduced shortcoming.
+Debtmark is released at 0.7.8 and its 51-test suite is healthy when exercised through the installed-package path used by CI. The strict `--changed` revision correction and its release work below are complete. The successor `artifact-audit` project request has been fulfilled, but this checkout is still the debtmark repository. It is in maintenance mode: do not invent another report format or broaden the scanner without a reproduced shortcoming.
 
 ## 1. Treat `--changed` revisions strictly as revisions
 
