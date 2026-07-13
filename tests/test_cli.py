@@ -281,6 +281,29 @@ class ScanTests(unittest.TestCase):
                 with self.subTest(revision=revision):
                     self.assertEqual(git_changed_files(root, revision), [root / "changed.py"])
 
+    def test_changed_file_selection_keeps_staged_unstaged_renamed_and_unusual_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            staged = root / "staged.py"
+            unstaged = root / "unstaged.py"
+            original = root / "before\nrename.py"
+            renamed = root / "after\nrename.py"
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
+            for path in (staged, unstaged, original):
+                path.write_text("base\n", encoding="utf-8")
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            staged.write_text("staged\n", encoding="utf-8")
+            subprocess.run(["git", "add", staged.name], cwd=root, check=True)
+            unstaged.write_text("unstaged\n", encoding="utf-8")
+            subprocess.run(["git", "mv", original.name, renamed.name], cwd=root, check=True)
+
+            files = git_changed_files(root, "HEAD")
+
+            self.assertEqual(set(files or ()), {staged, unstaged, renamed})
+
     def test_changed_file_selection_rejects_option_like_revision(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
